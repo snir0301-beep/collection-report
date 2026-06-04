@@ -298,33 +298,101 @@ function bkt(d) {
 }
 function detectCols(h) {
   const f = (...opts) => { for (const o of opts) { const i = h.findIndex(x => (x || '').toString().includes(o)); if (i >= 0) return i; } return -1; };
-  return { company: f('שם החברה'), period: f('פעילות לחודש'), client: f('לקוח'), project: f('שם הפרויקט'), amount: f('הפרש תשלום'), paid: f('שולם/לא שולם'), notes: f('הערות') };
+  return {
+    company: f('שם החברה', 'לקוח פנימי'),
+    period: f('פעילות לחודש'),
+    date: f('תאריך חשבון', 'תאריך'),
+    client: f('שם לקוח', 'לקוח'),
+    project: f('שם הפרויקט', 'שם פרוייקט'),
+    amount: f('הפרש תשלום', 'יתרה לתשלום'),
+    paid: f('שולם/לא שולם'),
+    status: f('סטטוס חשבון', 'סטטוס'),
+    notes: f('הערות')
+  };
 }
+
+function daysOldFromDate(val) {
+  if (!val) return null;
+  let d;
+  if (val instanceof Date) d = val;
+  else {
+    // Excel serial number
+    const n = parseFloat(val);
+    if (!isNaN(n) && n > 10000) {
+      d = new Date(Math.round((n - 25569) * 86400 * 1000));
+    } else {
+      d = new Date(val);
+    }
+  }
+  if (!d || isNaN(d.getTime())) return null;
+  return Math.floor((TODAY - d) / 86400000);
+}
+
 function processWB(wb, fname) {
   let cname = fname.replace(/\.(xlsx|xls)$/i, '').replace(/___/g, '')
     .replace(/דוח[_ ]?חייבים[_ ]?/g, '').replace(/מעודכן[_ ]?/g, '')
     .replace(/\d{2}[._\-]\d{2}[._\-]\d{2,4}/g, '').replace(/[_\-]+/g, ' ').trim() || fname;
-  const sn = wb.SheetNames.find(s => s.includes('ריכוז חובות')) || wb.SheetNames.find(s => !s.startsWith('תרשים'));
+
+  const sn = wb.SheetNames.find(s => s.includes('ריכוז חובות')) ||
+             wb.SheetNames.find(s => s.includes('REP_Bill') || s.includes('Collection') || s.includes('גביה')) ||
+             wb.SheetNames.find(s => !s.startsWith('תרשים'));
   if (!sn) return [];
   const ws = wb.Sheets[sn];
-  const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+  const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, raw: true });
+
+  // Find header row — look for key column names
   let hr = -1;
-  for (let i = 0; i < Math.min(6, data.length); i++) { if (data[i] && data[i].some(c => c && c.toString().includes('פעילות לחודש'))) { hr = i; break; } }
+  const KEY_COLS = ['פעילות לחודש', 'תאריך חשבון', 'יתרה לתשלום', 'הפרש תשלום'];
+  for (let i = 0; i < Math.min(8, data.length); i++) {
+    if (data[i] && KEY_COLS.some(k => data[i].some(c => c && c.toString().includes(k)))) { hr = i; break; }
+  }
   if (hr < 0) return [];
+
   const cols = detectCols(data[hr]);
-  if (cols.period < 0 || cols.amount < 0) return [];
+  if (cols.amount < 0) return [];
+
+  // Detect format
+  const isAES = cols.period < 0 && cols.date >= 0; // עמוס חלפון / AES format
+
   const rows = [];
   for (let i = hr + 1; i < data.length; i++) {
     const r = data[i]; if (!r) continue;
-    const period = r[cols.period]; if (!period || !period.toString().match(/\d{2}\/\d{2}/)) continue;
-    const pv = cols.paid >= 0 ? (r[cols.paid] || '').toString().replace(/\s/g, '') : '';
-    if (pv !== 'ל') continue;
-    let amt = cols.amount >= 0 ? r[cols.amount] : null;
-    if (amt !== null) { amt = parseFloat(amt); if (isNaN(amt)) amt = null; }
+
+    let days = null;
+    if (isAES) {
+      // AES format: use invoice date, all rows are open debts
+      const dateVal = r[cols.date];
+      if (!dateVal) continue;
+      days = daysOldFromDate(dateVal);
+    } else {
+      // Standard format: filter by שולם/לא שולם = ל
+      const period = r[cols.period];
+      if (!period || !period.toString().match(/\d{2}\/\d{2}/)) continue;
+      const pv = cols.paid >= 0 ? (r[cols.paid] || '').toString().replace(/\s/g, '') : '';
+      if (pv !== 'ל') continue;
+      days = daysOld(period.toString().trim());
+    }
+
+    let amt = r[cols.amount];
+    if (amt !== null && amt !== undefined) { amt = parseFloat(amt); if (isNaN(amt)) amt = null; }
     if (!amt || amt <= 0) continue;
-    const comp = (cols.company >= 0 && r[cols.company]) ? r[cols.company].toString().trim() : cname;
-    const days = daysOld(period.toString().trim());
-    rows.push({ company: comp || cname, period: period.toString().trim(), client: (cols.client >= 0 ? (r[cols.client] || '') : '').toString(), project: (cols.project >= 0 ? (r[cols.project] || '') : '').toString(), amount: amt, notes: (cols.notes >= 0 ? (r[cols.notes] || '') : '').toString(), days, bucket: bkt(days), src: fname });
+
+    const comp = (cols.company >= 0 && r[cols.company]) ? r[cols.company].toString().split('  ')[0].trim() : cname;
+    const period = isAES ? '' : (r[cols.period] || '').toString().trim();
+    const status = cols.status >= 0 ? (r[cols.status] || '').toString().trim() : '';
+    const notes = cols.notes >= 0 ? (r[cols.notes] || '').toString().substring(0, 200) : '';
+
+    rows.push({
+      company: comp || cname,
+      period,
+      client: (cols.client >= 0 ? (r[cols.client] || '') : '').toString(),
+      project: (cols.project >= 0 ? (r[cols.project] || '') : '').toString(),
+      amount: amt,
+      notes: notes.split('\n')[0], // first line only
+      days,
+      bucket: bkt(days),
+      src: fname
+    });
   }
   return rows;
 }
