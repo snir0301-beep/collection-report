@@ -1,1 +1,585 @@
+<!DOCTYPE html>
+<!-- saved from url=(0042)file:///C:/Users/User/Downloads/index.html -->
+<html lang="he" dir="rtl"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>דוח גביה | קבוצת AM הנדסה</title>
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+<link href="./דוח גביה _ קבוצת AM הנדסה_files/css2" rel="stylesheet">
+<script src="./דוח גביה _ קבוצת AM הנדסה_files/xlsx.full.min.js.הורדה"></script>
+<script src="./דוח גביה _ קבוצת AM הנדסה_files/chart.umd.js.הורדה"></script>
+<style>
+:root {
+  --bg: #f4f3ef;
+  --surface: #ffffff;
+  --surface2: #f9f8f5;
+  --border: rgba(0,0,0,0.08);
+  --border2: rgba(0,0,0,0.14);
+  --text: #1a1814;
+  --text2: #6b6760;
+  --text3: #a09d99;
+  --accent: #1e3a2f;
+  --accent-light: #e8f0eb;
+  --green: #22c55e; --green-bg: #f0fdf4; --green-text: #166534;
+  --amber: #f59e0b; --amber-bg: #fffbeb; --amber-text: #92400e;
+  --orange: #f97316; --orange-bg: #fff7ed; --orange-text: #9a3412;
+  --red: #ef4444; --red-bg: #fef2f2; --red-text: #991b1b;
+  --blue-bg: #eff6ff; --blue-text: #1d4ed8;
+  --radius: 10px; --radius-lg: 14px; --radius-xl: 18px;
+  --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--text); direction: rtl; min-height: 100vh; font-size: 14px; line-height: 1.6; }
+
+/* Layout */
+.app { display: flex; flex-direction: column; min-height: 100vh; }
+header { background: var(--accent); color: #fff; padding: 0 32px; height: 58px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+.header-logo { display: flex; align-items: center; gap: 10px; }
+.header-logo span { font-size: 15px; font-weight: 600; letter-spacing: -.2px; }
+.header-logo .dot { width: 8px; height: 8px; border-radius: 50%; background: #6ee7a0; }
+.header-date { font-size: 12px; color: rgba(255,255,255,.55); }
+main { flex: 1; padding: 28px 32px; max-width: 1100px; margin: 0 auto; width: 100%; }
+
+/* Upload */
+.upload-section { margin-bottom: 24px; }
+.dropzone {
+  border: 2px dashed var(--border2);
+  border-radius: var(--radius-xl);
+  padding: 36px 24px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--surface);
+  transition: all .2s;
+  position: relative;
+}
+.dropzone:hover, .dropzone.drag { border-color: var(--accent); background: var(--accent-light); }
+.dropzone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.dz-icon { font-size: 36px; color: var(--text3); margin-bottom: 10px; }
+.dz-title { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+.dz-sub { font-size: 12px; color: var(--text3); }
+.file-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--accent-light); color: var(--accent);
+  border: 1px solid rgba(30,58,47,.15);
+  border-radius: 20px; padding: 4px 12px 4px 8px;
+  font-size: 12px; font-weight: 500;
+}
+.chip-rm { cursor: pointer; opacity: .5; font-size: 16px; line-height: 1; padding: 0 2px; }
+.chip-rm:hover { opacity: 1; }
+
+/* KPI */
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.kpi-card { background: var(--surface); border-radius: var(--radius-lg); padding: 16px 18px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+.kpi-label { font-size: 11px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+.kpi-val { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1; }
+.kpi-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+.kpi-card.total .kpi-val { color: var(--accent); }
+
+/* Tabs */
+.tabs-bar { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 20px; }
+.tab-btn { padding: 10px 20px; font-size: 13px; font-weight: 500; color: var(--text2); cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all .15s; font-family: 'Heebo', sans-serif; }
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* Tables */
+.table-wrap { overflow-x: auto; border-radius: var(--radius-lg); border: 1px solid var(--border); background: var(--surface); box-shadow: var(--shadow); }
+table { width: 100%; border-collapse: collapse; }
+thead th { text-align: right; padding: 10px 14px; font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .4px; background: var(--surface2); border-bottom: 1px solid var(--border); white-space: nowrap; }
+tbody td { text-align: right; padding: 9px 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--surface2); }
+.total-row td { font-weight: 600; background: var(--surface2); }
+
+/* Badges */
+.badge { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.b0 { background: var(--green-bg); color: var(--green-text); }
+.b1 { background: var(--amber-bg); color: var(--amber-text); }
+.b2 { background: var(--orange-bg); color: var(--orange-text); }
+.b3 { background: var(--red-bg); color: var(--red-text); }
+.co-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; background: var(--blue-bg); color: var(--blue-text); }
+
+/* Chart area */
+.chart-card { background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow); padding: 20px; margin-bottom: 20px; }
+.chart-title { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 14px; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 12px; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); }
+.legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+/* Company bars */
+.co-card { background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border); padding: 18px 20px; margin-bottom: 14px; box-shadow: var(--shadow); }
+.co-card-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
+.co-name { font-size: 15px; font-weight: 600; }
+.co-total { font-size: 13px; color: var(--text2); }
+.bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.bar-label { min-width: 110px; font-size: 11px; color: var(--text2); }
+.bar-track { flex: 1; height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; transition: width .4s ease; }
+.bar-amt { min-width: 90px; text-align: left; font-size: 12px; font-weight: 500; color: var(--text); }
+
+/* Filters */
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; align-items: center; }
+.filters select, .filters input { font-family: 'Heebo', sans-serif; font-size: 12px; padding: 6px 10px; border-radius: var(--radius); border: 1px solid var(--border2); background: var(--surface); color: var(--text); outline: none; }
+.filters select:focus, .filters input:focus { border-color: var(--accent); }
+.filters input { min-width: 200px; }
+
+/* Empty */
+.empty { text-align: center; padding: 48px 24px; color: var(--text3); }
+.empty-icon { font-size: 40px; margin-bottom: 10px; }
+.empty-text { font-size: 14px; }
+
+/* Export bar */
+.export-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 22px; flex-wrap: wrap; }
+.btn { font-family: 'Heebo', sans-serif; font-size: 13px; font-weight: 500; padding: 8px 18px; border-radius: var(--radius); border: 1px solid var(--border2); background: var(--surface); color: var(--text); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all .15s; box-shadow: var(--shadow); }
+.btn:hover { background: var(--surface2); border-color: var(--border2); }
+.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn-primary:hover { background: #162d24; }
+.btn-excel { background: #166534; color: #fff; border-color: #166534; }
+.btn-excel:hover { background: #14532d; }
+
+/* Landing */
+.landing { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; text-align: center; }
+.landing-title { font-size: 28px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+.landing-sub { font-size: 15px; color: var(--text2); margin-bottom: 32px; max-width: 420px; line-height: 1.7; }
+
+/* Responsive */
+@media (max-width: 640px) {
+  main { padding: 16px; }
+  header { padding: 0 16px; }
+  .kpi-row { grid-template-columns: 1fr 1fr; }
+}
+
+/* Truncate */
+.trunc { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trunc-sm { max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="header-logo">
+      <span class="dot"></span>
+      <span>דוח גביה — קבוצת AM הנדסה</span>
+    </div>
+    <div class="header-date" id="hdate">נכון לתאריך: 4.6.2026</div>
+  </header>
+
+  <main>
+    <!-- Upload -->
+    <div class="upload-section">
+      <div class="dropzone" id="dz" ondragover="ev(event,&#39;over&#39;)" ondragleave="ev(event,&#39;leave&#39;)" ondrop="ev(event,&#39;drop&#39;)">
+        <input type="file" id="fi" accept=".xlsx,.xls" multiple="" onchange="hFiles(this.files)">
+        <div class="dz-icon">📂</div>
+        <div class="dz-title">גרור קבצי אקסל לכאן או לחץ להעלאה</div>
+        <div class="dz-sub">ניתן להעלות קבצים ממספר חברות בו-זמנית — כל פורמט מזוהה אוטומטית</div>
+      </div>
+      <div class="file-chips" id="chips"></div>
+    </div>
+
+    <!-- Landing (shown before data) -->
+    <div class="landing" id="landing">
+      <div class="landing-title">העלה קבצי דוח חייבים</div>
+      <div class="landing-sub">העלה קבצי אקסל של ריכוז חובות מהחברות השונות — המערכת תנתח אוטומטית את החובות הפתוחים ותציג דוח גביה קבוצתי לפי תקופות.</div>
+    </div>
+
+    <!-- Dashboard (shown after data) -->
+    <div id="dash" style="display:none">
+      <!-- Export -->
+      <div class="export-bar">
+        <button class="btn btn-excel" onclick="exportXLSX()">⬇ ייצוא לאקסל</button>
+        <button class="btn btn-primary" onclick="exportHTML()">🌐 ייצוא דוח HTML</button>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpi-row" id="kpis"></div>
+
+      <!-- Tabs -->
+      <div class="tabs-bar">
+        <button class="tab-btn active" onclick="swTab(&#39;summary&#39;,this)">סיכום קבוצתי</button>
+        <button class="tab-btn" onclick="swTab(&#39;company&#39;,this)">לפי חברה</button>
+        <button class="tab-btn" onclick="swTab(&#39;client&#39;,this)">לפי לקוח</button>
+        <button class="tab-btn" onclick="swTab(&#39;detail&#39;,this)">פירוט מלא</button>
+      </div>
+
+      <!-- Summary tab -->
+      <div id="t-summary">
+        <div class="chart-card">
+          <div class="chart-title">חובות פתוחים לפי חברה וסל ימים</div>
+          <div class="legend" id="leg"></div>
+          <div style="position:relative;width:100%;height:260px">
+            <canvas id="ch1" role="img" aria-label="גרף חובות לפי חברה"></canvas>
+          </div>
+        </div>
+        <div class="table-wrap"><table id="stbl"></table></div>
+      </div>
+
+      <!-- Company tab -->
+      <div id="t-company" style="display:none"><div id="co-det"></div></div>
+
+      <!-- Client tab -->
+      <div id="t-client" style="display:none">
+        <div class="filters">
+          <select id="fc2" onchange="rClient()"><option value="">כל החברות</option></select>
+          <select id="fb2" onchange="rClient()">
+            <option value="">כל התקופות</option>
+            <option>פחות מ-30 יום</option><option>30-90 יום</option><option>90-180 יום</option><option>מעל 180 יום</option>
+          </select>
+        </div>
+        <div class="table-wrap"><table id="ctbl"></table></div>
+      </div>
+
+      <!-- Detail tab -->
+      <div id="t-detail" style="display:none">
+        <div class="filters">
+          <select id="fc" onchange="rDet()"><option value="">כל החברות</option></select>
+          <select id="fb" onchange="rDet()">
+            <option value="">כל התקופות</option>
+            <option>פחות מ-30 יום</option><option>30-90 יום</option><option>90-180 יום</option><option>מעל 180 יום</option>
+          </select>
+          <input id="fs" placeholder="חיפוש לקוח / פרויקט..." oninput="rDet()">
+        </div>
+        <div class="table-wrap" style="overflow-x:auto"><table id="dtbl"></table></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const TODAY = new Date();
+document.getElementById('hdate').textContent = 'נכון לתאריך: ' + TODAY.toLocaleDateString('he-IL');
+
+let allRows = [], companies = [], chart1 = null;
+const BUCKETS = ['פחות מ-30 יום', '30-90 יום', '90-180 יום', 'מעל 180 יום'];
+const BCOLORS = ['#22c55e', '#f59e0b', '#f97316', '#ef4444'];
+const BCLS = ['b0', 'b1', 'b2', 'b3'];
+const OPEN_ST = ['ל', 'ב', 'בהמתנה הערכה', 'בהמתנה לתביעה', 'קוזז בהמתנה', 'קוזז בהמתנה '];
+
+function fmt(n) { if (!n && n !== 0) return '—'; return Math.round(n).toLocaleString('he-IL') + ' ₪'; }
+function fmtK(n) {
+  if (!n && n !== 0) return '—';
+  if (Math.abs(n) >= 1000000) return (n / 1000000).toFixed(1) + 'M ₪';
+  if (Math.abs(n) >= 1000) return Math.round(n / 1000) + 'K ₪';
+  return Math.round(n).toLocaleString('he-IL') + ' ₪';
+}
+
+function parseMY(s) {
+  if (!s) return null;
+  s = s.toString().trim();
+  const m = s.match(/^(\d{1,2})\/(\d{2,4})$/);
+  if (!m) return null;
+  let mo = parseInt(m[1]) - 1, yr = parseInt(m[2]);
+  if (yr < 100) yr += 2000;
+  return new Date(yr, mo, 1);
+}
+function daysOld(s) { const d = parseMY(s); if (!d) return null; return Math.floor((TODAY - d) / 86400000); }
+function bkt(d) {
+  if (d === null || d === undefined || isNaN(d)) return 'לא ידוע';
+  if (d < 30) return 'פחות מ-30 יום';
+  if (d < 90) return '30-90 יום';
+  if (d < 180) return '90-180 יום';
+  return 'מעל 180 יום';
+}
+
+function detectCols(h) {
+  const f = (...opts) => { for (const o of opts) { const i = h.findIndex(x => (x || '').toString().includes(o)); if (i >= 0) return i; } return -1; };
+  return { company: f('שם החברה'), period: f('פעילות לחודש'), client: f('לקוח'), project: f('שם הפרויקט'), amount: f('הפרש תשלום'), paid: f('שולם/לא שולם'), notes: f('הערות'), handler: f('לטיפול') };
+}
+
+function processWB(wb, fname) {
+  const cname = fname.replace(/\.(xlsx|xls)$/i, '').replace(/___/g, '').replace(/דוח_חייבים|מעודכן|\d{2}_\d{2}_\d{2}/g, '').replace(/_/g, ' ').trim();
+  const sn = wb.SheetNames.find(s => s.includes('ריכוז חובות')) || wb.SheetNames.find(s => !s.startsWith('תרשים'));
+  if (!sn) return [];
+  const ws = wb.Sheets[sn];
+  const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+  let hr = -1;
+  for (let i = 0; i < Math.min(6, data.length); i++) { if (data[i] && data[i].some(c => c && c.toString().includes('פעילות לחודש'))) { hr = i; break; } }
+  if (hr < 0) return [];
+  const cols = detectCols(data[hr]);
+  if (cols.period < 0 || cols.amount < 0) return [];
+  const rows = [];
+  for (let i = hr + 1; i < data.length; i++) {
+    const r = data[i]; if (!r) continue;
+    const period = r[cols.period]; if (!period || !period.toString().match(/\d{2}\/\d{2}/)) continue;
+    const pv = cols.paid >= 0 ? (r[cols.paid] || '').toString().trim() : '';
+    if (!OPEN_ST.includes(pv)) continue;
+    let amt = cols.amount >= 0 ? r[cols.amount] : null;
+    if (amt !== null) { amt = parseFloat(amt); if (isNaN(amt)) amt = null; }
+    if (!amt || amt <= 0) continue;
+    const comp = (cols.company >= 0 && r[cols.company]) ? r[cols.company].toString().trim() : cname;
+    const days = daysOld(period.toString().trim());
+    rows.push({ company: comp || cname, period: period.toString().trim(), client: cols.client >= 0 ? (r[cols.client] || '') : '', project: cols.project >= 0 ? (r[cols.project] || '') : '', amount: amt, paid: pv, notes: cols.notes >= 0 ? (r[cols.notes] || '') : '', days, bucket: bkt(days), src: fname });
+  }
+  return rows;
+}
+
+function ev(e, type) {
+  e.preventDefault();
+  const dz = document.getElementById('dz');
+  if (type === 'over') dz.classList.add('drag');
+  else if (type === 'leave') dz.classList.remove('drag');
+  else if (type === 'drop') { dz.classList.remove('drag'); hFiles(e.dataTransfer.files); }
+}
+
+function hFiles(files) {
+  for (const f of files) {
+    const rd = new FileReader();
+    rd.onload = e => {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const rows = processWB(wb, f.name);
+      if (rows.length > 0) {
+        allRows = allRows.filter(r => r.src !== f.name).concat(rows);
+        addChip(f.name, rows.length);
+        renderAll();
+      } else {
+        alert('לא נמצאו חובות פתוחים בקובץ: ' + f.name + '\n\nוודא שיש גיליון "ריכוז חובות" עם עמודות "פעילות לחודש", "הפרש תשלום" ו"שולם/לא שולם".');
+      }
+    };
+    rd.readAsArrayBuffer(f);
+  }
+}
+
+function addChip(name, count) {
+  if (document.querySelector(`[data-f="${CSS.escape(name)}"]`)) return;
+  const sn = name.replace('___', '').replace(/\.(xlsx|xls)$/i, '').replace(/דוח_חייבים_|מעודכן_/g, '');
+  const chip = document.createElement('div');
+  chip.className = 'chip';
+  chip.setAttribute('data-f', name);
+  chip.innerHTML = `📄 ${sn} <span style="color:var(--text3);font-size:11px">(${count})</span> <span class="chip-rm" onclick="rmFile('${name.replace(/'/g,"\\'")}')">×</span>`;
+  document.getElementById('chips').appendChild(chip);
+}
+
+function rmFile(name) {
+  allRows = allRows.filter(r => r.src !== name);
+  const c = document.querySelector(`[data-f="${CSS.escape(name)}"]`);
+  if (c) c.remove();
+  if (allRows.length === 0) { document.getElementById('dash').style.display = 'none'; document.getElementById('landing').style.display = ''; }
+  else renderAll();
+}
+
+function renderAll() {
+  companies = [...new Set(allRows.map(r => r.company))].sort();
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('dash').style.display = '';
+  rKPIs(); rSummary(); rCompany(); rClient(); rDet(); populateFilters();
+}
+
+function rKPIs() {
+  const total = allRows.reduce((s, r) => s + (r.amount || 0), 0);
+  const sums = {}, cnts = {};
+  BUCKETS.forEach(b => { sums[b] = 0; cnts[b] = 0; });
+  allRows.forEach(r => { sums[r.bucket] = (sums[r.bucket] || 0) + (r.amount || 0); cnts[r.bucket] = (cnts[r.bucket] || 0) + 1; });
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi-card total"><div class="kpi-label">סה"כ חוב פתוח</div><div class="kpi-val">${fmtK(total)}</div><div class="kpi-sub">${allRows.length} רשומות | ${companies.length} חברות</div></div>
+    <div class="kpi-card"><div class="kpi-label">פחות מ-30 יום</div><div class="kpi-val" style="color:var(--green)">${fmtK(sums['פחות מ-30 יום'])}</div><div class="kpi-sub">${cnts['פחות מ-30 יום']} רשומות</div></div>
+    <div class="kpi-card"><div class="kpi-label">30–90 יום</div><div class="kpi-val" style="color:var(--amber)">${fmtK(sums['30-90 יום'])}</div><div class="kpi-sub">${cnts['30-90 יום']} רשומות</div></div>
+    <div class="kpi-card"><div class="kpi-label">90–180 יום</div><div class="kpi-val" style="color:var(--orange)">${fmtK(sums['90-180 יום'])}</div><div class="kpi-sub">${cnts['90-180 יום']} רשומות</div></div>
+    <div class="kpi-card"><div class="kpi-label">מעל 180 יום</div><div class="kpi-val" style="color:var(--red)">${fmtK(sums['מעל 180 יום'])}</div><div class="kpi-sub">${cnts['מעל 180 יום']} רשומות</div></div>`;
+}
+
+function rSummary() {
+  const byC = {}; companies.forEach(c => { byC[c] = {}; BUCKETS.forEach(b => byC[c][b] = 0); });
+  allRows.forEach(r => { if (byC[r.company]) byC[r.company][r.bucket] = (byC[r.company][r.bucket] || 0) + (r.amount || 0); });
+  const tots = {}; BUCKETS.forEach(b => tots[b] = companies.reduce((s, c) => s + (byC[c][b] || 0), 0));
+  const grand = Object.values(tots).reduce((s, v) => s + v, 0);
+
+  document.getElementById('leg').innerHTML = BUCKETS.map((b, i) => `<div class="legend-item"><span class="legend-dot" style="background:${BCOLORS[i]}"></span>${b}</div>`).join('');
+
+  let h = `<thead><tr><th>חברה</th>${BUCKETS.map(b => `<th>${b}</th>`).join('')}<th>סה"כ</th></tr></thead><tbody>`;
+  companies.forEach(c => { const rt = BUCKETS.reduce((s, b) => s + (byC[c][b] || 0), 0); h += `<tr><td style="font-weight:500">${c}</td>${BUCKETS.map((b, i) => `<td><span class="badge ${BCLS[i]}">${fmtK(byC[c][b])}</span></td>`).join('')}<td style="font-weight:600">${fmtK(rt)}</td></tr>`; });
+  h += `<tr class="total-row"><td>סה"כ קבוצה</td>${BUCKETS.map(b => `<td>${fmtK(tots[b])}</td>`).join('')}<td>${fmtK(grand)}</td></tr></tbody>`;
+  document.getElementById('stbl').innerHTML = h;
+
+  if (chart1) chart1.destroy();
+  chart1 = new Chart(document.getElementById('ch1').getContext('2d'), {
+    type: 'bar',
+    data: { labels: companies, datasets: BUCKETS.map((b, i) => ({ label: b, data: companies.map(c => Math.round(byC[c][b] || 0)), backgroundColor: BCOLORS[i], borderRadius: 4, borderSkipped: false })) },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.dataset.label + ': ' + Math.round(c.raw).toLocaleString('he-IL') + ' ₪' } } }, scales: { x: { stacked: true, ticks: { font: { family: 'Heebo', size: 12 } } }, y: { stacked: true, ticks: { callback: v => v >= 1000000 ? (v / 1000000).toFixed(1) + 'M' : v >= 1000 ? Math.round(v / 1000) + 'K' : v } } } }
+  });
+}
+
+function rCompany() {
+  let h = '';
+  companies.forEach(c => {
+    const rows = allRows.filter(r => r.company === c);
+    const byB = {}; BUCKETS.forEach(b => byB[b] = rows.filter(r => r.bucket === b).reduce((s, r) => s + (r.amount || 0), 0));
+    const total = Object.values(byB).reduce((s, v) => s + v, 0);
+    const mx = Math.max(...Object.values(byB));
+    h += `<div class="co-card"><div class="co-card-header"><span class="co-name">${c}</span><span class="co-total">סה"כ: ${fmtK(total)}</span></div>`;
+    BUCKETS.forEach((b, i) => { const pct = mx > 0 ? (byB[b] / mx) * 100 : 0; h += `<div class="bar-row"><span class="bar-label">${b}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${BCOLORS[i]}"></div></div><span class="bar-amt">${fmtK(byB[b])}</span></div>`; });
+    h += '</div>';
+  });
+  document.getElementById('co-det').innerHTML = h;
+}
+
+function rClient() {
+  const cf = document.getElementById('fc2').value, bf = document.getElementById('fb2').value;
+  let rows = allRows;
+  if (cf) rows = rows.filter(r => r.company === cf);
+  if (bf) rows = rows.filter(r => r.bucket === bf);
+  const byC = {};
+  rows.forEach(r => { const k = r.client || '(לא ידוע)'; if (!byC[k]) byC[k] = { co: r.company, total: 0 }; BUCKETS.forEach(b => { if (!byC[k][b]) byC[k][b] = 0; }); byC[k][r.bucket] = (byC[k][r.bucket] || 0) + (r.amount || 0); byC[k].total += (r.amount || 0); });
+  const sorted = Object.entries(byC).sort((a, b) => b[1].total - a[1].total);
+  let h = `<thead><tr><th>לקוח</th><th>חברה</th>${BUCKETS.map(b => `<th>${b}</th>`).join('')}<th>סה"כ</th></tr></thead><tbody>`;
+  sorted.forEach(([cl, d]) => { h += `<tr><td class="trunc-sm" style="font-weight:500" title="${cl}">${cl}</td><td><span class="co-badge">${d.co || ''}</span></td>${BUCKETS.map((b, i) => d[b] > 0 ? `<td><span class="badge ${BCLS[i]}">${fmtK(d[b])}</span></td>` : `<td style="color:var(--text3)">—</td>`).join('')}<td style="font-weight:600">${fmtK(d.total)}</td></tr>`; });
+  h += '</tbody>';
+  document.getElementById('ctbl').innerHTML = h;
+}
+
+function rDet() {
+  const cf = document.getElementById('fc').value, bf = document.getElementById('fb').value;
+  const sf = (document.getElementById('fs').value || '').toLowerCase();
+  let rows = allRows;
+  if (cf) rows = rows.filter(r => r.company === cf);
+  if (bf) rows = rows.filter(r => r.bucket === bf);
+  if (sf) rows = rows.filter(r => (r.client || '').toLowerCase().includes(sf) || (r.project || '').toLowerCase().includes(sf));
+  rows = [...rows].sort((a, b) => (b.amount || 0) - (a.amount || 0));
+  let h = `<thead><tr><th>חברה</th><th>תקופה</th><th>לקוח</th><th>פרויקט</th><th>סכום חוב</th><th>ימים</th><th>סל ימים</th><th>הערות</th></tr></thead><tbody>`;
+  if (!rows.length) h += `<tr><td colspan="8" class="empty"><div class="empty-icon">🔍</div><div class="empty-text">אין נתונים תואמים לסינון</div></td></tr>`;
+  rows.forEach(r => { const bi = BUCKETS.indexOf(r.bucket); h += `<tr><td><span class="co-badge">${r.company}</span></td><td>${r.period}</td><td class="trunc-sm" title="${r.client}">${r.client}</td><td class="trunc" title="${r.project}">${r.project}</td><td style="font-weight:600">${fmt(r.amount)}</td><td style="color:${bi >= 0 ? BCOLORS[bi] : 'inherit'};font-weight:500">${r.days !== null ? r.days : '—'}</td><td><span class="badge ${bi >= 0 ? BCLS[bi] : ''}">${r.bucket}</span></td><td class="trunc" title="${r.notes}" style="color:var(--text3);font-size:12px">${r.notes}</td></tr>`; });
+  h += '</tbody>';
+  document.getElementById('dtbl').innerHTML = h;
+}
+
+function populateFilters() {
+  ['fc', 'fc2'].forEach(id => { const s = document.getElementById(id); const v = s.value; s.innerHTML = '<option value="">כל החברות</option>' + companies.map(c => `<option value="${c}"${c === v ? ' selected' : ''}>${c}</option>`).join(''); });
+}
+
+function swTab(name, el) {
+  document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active')); el.classList.add('active');
+  ['summary', 'company', 'client', 'detail'].forEach(t => { document.getElementById('t-' + t).style.display = (t === name ? '' : 'none'); });
+}
+
+/* ─── Export XLSX ─── */
+function exportXLSX() {
+  const wb = XLSX.utils.book_new();
+  const byC = {}; companies.forEach(c => { byC[c] = {}; BUCKETS.forEach(b => byC[c][b] = 0); });
+  allRows.forEach(r => { if (byC[r.company]) byC[r.company][r.bucket] = (byC[r.company][r.bucket] || 0) + (r.amount || 0); });
+  const tots = {}; BUCKETS.forEach(b => tots[b] = allRows.filter(r => r.bucket === b).reduce((s, r) => s + (r.amount || 0), 0));
+
+  const sd = [['דוח גביה קבוצתי', TODAY.toLocaleDateString('he-IL')], [], ['חברה', ...BUCKETS, 'סה"כ']];
+  companies.forEach(c => { const rt = BUCKETS.reduce((s, b) => s + (byC[c][b] || 0), 0); sd.push([c, ...BUCKETS.map(b => Math.round(byC[c][b] || 0)), Math.round(rt)]); });
+  sd.push(['סה"כ קבוצה', ...BUCKETS.map(b => Math.round(tots[b])), Math.round(allRows.reduce((s, r) => s + (r.amount || 0), 0))]);
+  const ws0 = XLSX.utils.aoa_to_sheet(sd);
+  ws0['!cols'] = [{ wch: 20 }, ...BUCKETS.map(() => ({ wch: 16 })), { wch: 16 }];
+  XLSX.utils.book_append_sheet(wb, ws0, 'סיכום קבוצתי');
+
+  const dd = [['חברה', 'תקופה', 'לקוח', 'שם פרויקט', 'סכום חוב (₪)', 'ימים פתוח', 'סל ימים', 'סטטוס', 'הערות']];
+  [...allRows].sort((a, b) => (b.amount || 0) - (a.amount || 0)).forEach(r => dd.push([r.company, r.period, r.client, r.project, Math.round(r.amount || 0), r.days, r.bucket, r.paid, r.notes]));
+  const ws1 = XLSX.utils.aoa_to_sheet(dd);
+  ws1['!cols'] = [{ wch: 14 }, { wch: 10 }, { wch: 20 }, { wch: 38 }, { wch: 16 }, { wch: 10 }, { wch: 14 }, { wch: 8 }, { wch: 32 }];
+  XLSX.utils.book_append_sheet(wb, ws1, 'פירוט מלא');
+
+  companies.forEach(c => {
+    const rows = allRows.filter(r => r.company === c);
+    const cd = [[c, TODAY.toLocaleDateString('he-IL')], [], ['תקופה', 'לקוח', 'שם פרויקט', 'סכום חוב (₪)', 'ימים פתוח', 'סל ימים', 'הערות']];
+    [...rows].sort((a, b) => (b.amount || 0) - (a.amount || 0)).forEach(r => cd.push([r.period, r.client, r.project, Math.round(r.amount || 0), r.days, r.bucket, r.notes]));
+    const ws = XLSX.utils.aoa_to_sheet(cd);
+    ws['!cols'] = [{ wch: 10 }, { wch: 20 }, { wch: 38 }, { wch: 16 }, { wch: 10 }, { wch: 14 }, { wch: 32 }];
+    XLSX.utils.book_append_sheet(wb, ws, c.substring(0, 31));
+  });
+  XLSX.writeFile(wb, 'דוח_גביה_' + TODAY.toLocaleDateString('he-IL').replace(/\//g, '-') + '.xlsx');
+}
+
+/* ─── Export HTML snapshot ─── */
+function exportHTML() {
+  const byC = {}; companies.forEach(c => { byC[c] = {}; BUCKETS.forEach(b => byC[c][b] = 0); });
+  allRows.forEach(r => { if (byC[r.company]) byC[r.company][r.bucket] = (byC[r.company][r.bucket] || 0) + (r.amount || 0); });
+  const tots = {}; BUCKETS.forEach(b => tots[b] = allRows.filter(r => r.bucket === b).reduce((s, r) => s + (r.amount || 0), 0));
+  const grand = Object.values(tots).reduce((s, v) => s + v, 0);
+  const BADGE = ['background:#f0fdf4;color:#166534', 'background:#fffbeb;color:#92400e', 'background:#fff7ed;color:#9a3412', 'background:#fef2f2;color:#991b1b'];
+
+  let sumRows = '';
+  companies.forEach(c => {
+    const rt = BUCKETS.reduce((s, b) => s + (byC[c][b] || 0), 0);
+    sumRows += `<tr><td style="padding:8px 12px;font-weight:500">${c}</td>${BUCKETS.map((b, i) => `<td style="padding:8px 12px"><span style="display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;${BADGE[i]}">${fmtK(byC[c][b])}</span></td>`).join('')}<td style="padding:8px 12px;font-weight:700">${fmtK(rt)}</td></tr>`;
+  });
+  sumRows += `<tr style="background:#f5f5f2"><td style="padding:8px 12px;font-weight:700">סה"כ קבוצה</td>${BUCKETS.map(b => `<td style="padding:8px 12px;font-weight:600">${fmtK(tots[b])}</td>`).join('')}<td style="padding:8px 12px;font-weight:700">${fmtK(grand)}</td></tr>`;
+
+  const clientMap = {};
+  allRows.forEach(r => { const k = r.client || '(לא ידוע)'; if (!clientMap[k]) clientMap[k] = { co: r.company, total: 0 }; BUCKETS.forEach(b => { if (!clientMap[k][b]) clientMap[k][b] = 0; }); clientMap[k][r.bucket] = (clientMap[k][r.bucket] || 0) + (r.amount || 0); clientMap[k].total += (r.amount || 0); });
+  const topClients = Object.entries(clientMap).sort((a, b) => b[1].total - a[1].total).slice(0, 40);
+  let clRows = '';
+  topClients.forEach(([cl, d]) => { clRows += `<tr><td style="padding:7px 10px;font-weight:500;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${cl}</td><td style="padding:7px 10px"><span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;background:#eff6ff;color:#1d4ed8">${d.co || ''}</span></td>${BUCKETS.map((b, i) => d[b] > 0 ? `<td style="padding:7px 10px"><span style="display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;${BADGE[i]}">${fmtK(d[b])}</span></td>` : `<td style="padding:7px 10px;color:#ccc">—</td>`).join('')}<td style="padding:7px 10px;font-weight:700">${fmtK(d.total)}</td></tr>`; });
+
+  let detRows = '';
+  [...allRows].sort((a, b) => (b.amount || 0) - (a.amount || 0)).forEach(r => { const bi = BUCKETS.indexOf(r.bucket); detRows += `<tr><td style="padding:7px 10px"><span style="display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;background:#eff6ff;color:#1d4ed8">${r.company}</span></td><td style="padding:7px 10px">${r.period}</td><td style="padding:7px 10px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.client}</td><td style="padding:7px 10px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.project}</td><td style="padding:7px 10px;font-weight:600">${fmt(r.amount)}</td><td style="padding:7px 10px;font-weight:500;color:${bi >= 0 ? BCOLORS[bi] : '#333'}">${r.days !== null ? r.days : '—'}</td><td style="padding:7px 10px"><span style="display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;${bi >= 0 ? BADGE[bi] : ''}">${r.bucket}</span></td></tr>`; });
+
+  const chartData = JSON.stringify({ labels: companies, datasets: BUCKETS.map((b, i) => ({ label: b, data: companies.map(c => Math.round(byC[c][b] || 0)), backgroundColor: BCOLORS[i] })) });
+
+  const html = `<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>דוח גביה — ${TODAY.toLocaleDateString('he-IL')}</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"><\/script>
+<style>
+*{box-sizing:border-box;direction:rtl;margin:0;padding:0}
+body{font-family:'Heebo',Arial,sans-serif;background:#f4f3ef;color:#1a1814;font-size:14px}
+header{background:#1e3a2f;color:#fff;padding:0 32px;height:58px;display:flex;align-items:center;justify-content:space-between}
+.hlogo{font-size:15px;font-weight:600}
+.hsub{font-size:12px;opacity:.55}
+.container{max-width:1000px;margin:28px auto;padding:0 24px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:24px}
+.kpi{background:#fff;border-radius:12px;padding:16px 18px;border:1px solid rgba(0,0,0,.07)}
+.kpi-label{font-size:11px;font-weight:500;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.kpi-val{font-size:20px;font-weight:700}
+.kpi-sub{font-size:11px;color:#aaa;margin-top:4px}
+h2{font-size:14px;font-weight:700;color:#444;margin:2rem 0 .75rem;padding-bottom:8px;border-bottom:1px solid #eee}
+.card{background:#fff;border-radius:12px;border:1px solid rgba(0,0,0,.07);padding:20px;margin-bottom:20px}
+table{width:100%;border-collapse:collapse}
+th{text-align:right;padding:9px 12px;font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.4px;background:#faf9f7;border-bottom:1px solid #eee}
+td{text-align:right;padding:8px 12px;border-bottom:1px solid #f0ede8;font-size:13px}
+tr:last-child td{border-bottom:none}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px}
+.ldot{width:9px;height:9px;border-radius:2px;display:inline-block;margin-left:4px;vertical-align:middle}
+.note{font-size:11px;color:#bbb;text-align:center;margin-top:32px;padding-top:16px;border-top:1px solid #eee}
+@media print{body{background:#fff}.container{padding:0}}
+</style>
+</head>
+<body>
+<header>
+  <div class="hlogo">דוח גביה — קבוצת AM הנדסה</div>
+  <div class="hsub">נכון לתאריך: ${TODAY.toLocaleDateString('he-IL')} | ${companies.join(' | ')}</div>
+</header>
+<div class="container">
+<div class="kpi-row">
+  <div class="kpi"><div class="kpi-label">סה"כ חוב פתוח</div><div class="kpi-val" style="color:#1e3a2f">${fmtK(grand)}</div><div class="kpi-sub">${allRows.length} רשומות</div></div>
+  <div class="kpi"><div class="kpi-label">פחות מ-30 יום</div><div class="kpi-val" style="color:#22c55e">${fmtK(tots['פחות מ-30 יום'])}</div></div>
+  <div class="kpi"><div class="kpi-label">30–90 יום</div><div class="kpi-val" style="color:#f59e0b">${fmtK(tots['30-90 יום'])}</div></div>
+  <div class="kpi"><div class="kpi-label">90–180 יום</div><div class="kpi-val" style="color:#f97316">${fmtK(tots['90-180 יום'])}</div></div>
+  <div class="kpi"><div class="kpi-label">מעל 180 יום</div><div class="kpi-val" style="color:#ef4444">${fmtK(tots['מעל 180 יום'])}</div></div>
+</div>
+<h2>סיכום קבוצתי</h2>
+<div class="card">
+  <div class="legend">
+    ${BUCKETS.map((b, i) => `<span><span class="ldot" style="background:${BCOLORS[i]}"></span>${b}</span>`).join('')}
+  </div>
+  <div style="position:relative;height:240px;margin-bottom:16px"><canvas id="ch" role="img" aria-label="גרף חובות"></canvas></div>
+  <table><thead><tr><th>חברה</th>${BUCKETS.map(b => `<th>${b}</th>`).join('')}<th>סה"כ</th></tr></thead><tbody>${sumRows}</tbody></table>
+</div>
+<h2>לפי לקוח (40 גדולים)</h2>
+<div class="card"><table><thead><tr><th>לקוח</th><th>חברה</th>${BUCKETS.map(b => `<th>${b}</th>`).join('')}<th>סה"כ</th></tr></thead><tbody>${clRows}</tbody></table></div>
+<h2>פירוט מלא</h2>
+<div class="card"><table><thead><tr><th>חברה</th><th>תקופה</th><th>לקוח</th><th>פרויקט</th><th>סכום</th><th>ימים</th><th>סל</th></tr></thead><tbody>${detRows}</tbody></table></div>
+<div class="note">הופק ${new Date().toLocaleString('he-IL')} | קבוצת AM הנדסה</div>
+</div>
+<script>
+const d=${chartData};
+new Chart(document.getElementById('ch'),{type:'bar',data:{labels:d.labels,datasets:d.datasets.map(ds=>({...ds,borderRadius:4,borderSkipped:false}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.label+': '+Math.round(c.raw).toLocaleString('he-IL')+' ₪'}}},scales:{x:{stacked:true},y:{stacked:true,ticks:{callback:v=>v>=1000000?(v/1000000).toFixed(1)+'M':v>=1000?Math.round(v/1000)+'K':v}}}}});
+<\/script>
+</body>
+</html>`;
+
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'דוח_גביה_' + TODAY.toLocaleDateString('he-IL').replace(/\//g, '-') + '.html';
+  a.click();
+}
+</script>
+
+
+</body></html>
