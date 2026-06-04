@@ -309,8 +309,8 @@ function processWB(wb, fname) {
   for (let i = hr + 1; i < data.length; i++) {
     const r = data[i]; if (!r) continue;
     const period = r[cols.period]; if (!period || !period.toString().match(/\d{2}\/\d{2}/)) continue;
-    const pv = cols.paid >= 0 ? (r[cols.paid] || '').toString().trim() : '';
-    if (!OPEN_ST.includes(pv)) continue;
+    const pv = cols.paid >= 0 ? (r[cols.paid] || '').toString().replace(/\s/g, '') : '';
+    if (pv !== 'ל') continue;
     let amt = cols.amount >= 0 ? r[cols.amount] : null;
     if (amt !== null) { amt = parseFloat(amt); if (isNaN(amt)) amt = null; }
     if (!amt || amt <= 0) continue;
