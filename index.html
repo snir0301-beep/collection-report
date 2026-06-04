@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<!-- saved from url=(0042)file:///C:/Users/User/Downloads/index.html -->
-<html lang="he" dir="rtl"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>דוח גביה | קבוצת AM הנדסה</title>
-<link rel="preconnect" href="https://fonts.googleapis.com/">
-<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
-<link href="./דוח גביה _ קבוצת AM הנדסה_files/css2" rel="stylesheet">
-<script src="./דוח גביה _ קבוצת AM הנדסה_files/xlsx.full.min.js.הורדה"></script>
-<script src="./דוח גביה _ קבוצת AM הנדסה_files/chart.umd.js.הורדה"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 :root {
   --bg: #f4f3ef;
@@ -163,17 +163,17 @@ tbody tr:hover td { background: var(--surface2); }
       <span class="dot"></span>
       <span>דוח גביה — קבוצת AM הנדסה</span>
     </div>
-    <div class="header-date" id="hdate">נכון לתאריך: 4.6.2026</div>
+    <div class="header-date" id="hdate"></div>
   </header>
 
   <main>
     <!-- Upload -->
     <div class="upload-section">
-      <div class="dropzone" id="dz" ondragover="ev(event,&#39;over&#39;)" ondragleave="ev(event,&#39;leave&#39;)" ondrop="ev(event,&#39;drop&#39;)">
-        <input type="file" id="fi" accept=".xlsx,.xls" multiple="" onchange="hFiles(this.files)">
+      <div class="dropzone" id="dz" ondragover="ev(event,'over')" ondragleave="ev(event,'leave')" ondrop="ev(event,'drop')" onclick="document.getElementById('fi').click()">
+        <input type="file" id="fi" accept=".xlsx,.xls" multiple style="display:none" onchange="hFiles(this.files)">
         <div class="dz-icon">📂</div>
-        <div class="dz-title">גרור קבצי אקסל לכאן או לחץ להעלאה</div>
-        <div class="dz-sub">ניתן להעלות קבצים ממספר חברות בו-זמנית — כל פורמט מזוהה אוטומטית</div>
+        <div class="dz-title">לחץ כאן לבחירת קבצים</div>
+        <div class="dz-sub">או גרור קבצי אקסל לאזור זה — ניתן להעלות מספר חברות בבת אחת</div>
       </div>
       <div class="file-chips" id="chips"></div>
     </div>
@@ -197,10 +197,10 @@ tbody tr:hover td { background: var(--surface2); }
 
       <!-- Tabs -->
       <div class="tabs-bar">
-        <button class="tab-btn active" onclick="swTab(&#39;summary&#39;,this)">סיכום קבוצתי</button>
-        <button class="tab-btn" onclick="swTab(&#39;company&#39;,this)">לפי חברה</button>
-        <button class="tab-btn" onclick="swTab(&#39;client&#39;,this)">לפי לקוח</button>
-        <button class="tab-btn" onclick="swTab(&#39;detail&#39;,this)">פירוט מלא</button>
+        <button class="tab-btn active" onclick="swTab('summary',this)">סיכום קבוצתי</button>
+        <button class="tab-btn" onclick="swTab('company',this)">לפי חברה</button>
+        <button class="tab-btn" onclick="swTab('client',this)">לפי לקוח</button>
+        <button class="tab-btn" onclick="swTab('detail',this)">פירוט מלא</button>
       </div>
 
       <!-- Summary tab -->
@@ -580,6 +580,5 @@ new Chart(document.getElementById('ch'),{type:'bar',data:{labels:d.labels,datase
   a.click();
 }
 </script>
-
-
-</body></html>
+</body>
+</html>
