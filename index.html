@@ -377,7 +377,9 @@ function processWB(wb, fname) {
     if (amt !== null && amt !== undefined) { amt = parseFloat(amt); if (isNaN(amt)) amt = null; }
     if (!amt || amt <= 0) continue;
 
-    const comp = (cols.company >= 0 && r[cols.company]) ? r[cols.company].toString().split('  ')[0].trim() : cname;
+    const comp = isAES
+      ? cname  // always use filename for AES format
+      : ((cols.company >= 0 && r[cols.company]) ? r[cols.company].toString().split('  ')[0].trim() : cname);
     const period = isAES ? '' : (r[cols.period] || '').toString().trim();
     const status = cols.status >= 0 ? (r[cols.status] || '').toString().trim() : '';
     const notes = cols.notes >= 0 ? (r[cols.notes] || '').toString().substring(0, 200) : '';
