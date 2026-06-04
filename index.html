@@ -288,7 +288,14 @@ function detectCols(h) {
 }
 
 function processWB(wb, fname) {
-  const cname = fname.replace(/\.(xlsx|xls)$/i, '').replace(/___/g, '').replace(/דוח_חייבים|מעודכן|\d{2}_\d{2}_\d{2}/g, '').replace(/_/g, ' ').trim();
+  let cname = fname
+    .replace(/\.(xlsx|xls)$/i, '')
+    .replace(/___/g, '')
+    .replace(/דוח[_ ]?חייבים[_ ]?/g, '')
+    .replace(/מעודכן[_ ]?/g, '')
+    .replace(/\d{2}[._\-]\d{2}[._\-]\d{2,4}/g, '')
+    .replace(/[_\-]+/g, ' ')
+    .trim() || fname;
   const sn = wb.SheetNames.find(s => s.includes('ריכוז חובות')) || wb.SheetNames.find(s => !s.startsWith('תרשים'));
   if (!sn) return [];
   const ws = wb.Sheets[sn];
