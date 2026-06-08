@@ -616,6 +616,12 @@ function rSummary(){
   document.getElementById('stbl').innerHTML=h;
 }
 
+// ─── Data store for drill-down (avoids JSON in onclick) ───
+const _store = {};
+let _storeIdx = 0;
+function storeRows(rows){ const k='r'+(++_storeIdx); _store[k]=rows; return k; }
+function openStored(k,title,meta){ openModal(_store[k]||[],title,meta); }
+
 function rCompany(){
   let h='';
   companies.forEach(c=>{
@@ -623,11 +629,18 @@ function rCompany(){
     const byB={};BUCKETS.forEach(b=>byB[b]=rows.filter(r=>r.bucket===b).reduce((s,r)=>s+(r.amount||0),0));
     const total=Object.values(byB).reduce((s,v)=>s+v,0);
     const mx=Math.max(...Object.values(byB));
-    h+=`<div class="co-card"><div class="co-card-header"><span class="co-name">${c}</span><span class="co-total" style="cursor:pointer" onclick="openModal(allRows.filter(r=>r.company==='${c.replace(/'/g,"\\'")}'),'${c.replace(/'/g,"\\'")}','${rows.length} רשומות')">${fmtK(total)} ↓</span></div>`;
+    const allKey=storeRows(rows);
+    const esc=c.replace(/'/g,"\\'");
+    h+=`<div class="co-card">
+      <div class="co-card-header">
+        <span class="co-name">${c}</span>
+        <span class="co-total" style="cursor:pointer" onclick="openStored('${allKey}','${esc}','${rows.length} רשומות')">${fmtK(total)} ↓</span>
+      </div>`;
     BUCKETS.forEach((b,i)=>{
       const pct=mx>0?(byB[b]/mx)*100:0;
       const bRows=rows.filter(r=>r.bucket===b);
-      h+=`<div class="bar-row" style="cursor:pointer" onclick="openModal(${JSON.stringify(bRows).replace(/</g,'\\u003c')},'${c.replace(/'/g,"\\'")} · ${b}','${bRows.length} רשומות')">
+      const bKey=storeRows(bRows);
+      h+=`<div class="bar-row" style="cursor:${bRows.length?'pointer':'default'}" ${bRows.length?`onclick="openStored('${bKey}','${esc} · ${b}','${bRows.length} רשומות')"`:''}>
         <span class="bar-label">${b}</span>
         <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${BCOLORS[i]}"></div></div>
         <span class="bar-amt">${fmtK(byB[b])}</span>
@@ -646,7 +659,9 @@ function rClient(){
   const sorted=Object.entries(byC).sort((a,b)=>b[1].total-a[1].total);
   let h=`<thead><tr><th>לקוח</th><th>חברה</th>${BUCKETS.map(b=>`<th>${b}</th>`).join('')}<th>סה"כ</th></tr></thead><tbody>`;
   sorted.forEach(([cl,d])=>{
-    h+=`<tr class="clickable-row" onclick="openModal(${JSON.stringify(d._rows).replace(/</g,'\\u003c')},'${cl.replace(/'/g,"\\'")}','${d._rows.length} רשומות')">
+    const key=storeRows(d._rows);
+    const esc=cl.replace(/'/g,"\\'");
+    h+=`<tr class="clickable-row" onclick="openStored('${key}','${esc}','${d._rows.length} רשומות')">
       <td class="trunc-sm" style="font-weight:500" title="${cl}">${cl}</td>
       <td><span class="co-badge">${d.co||''}</span></td>
       ${BUCKETS.map((b,i)=>d[b]>0?`<td><span class="badge ${BCLS[i]}">${fmtK(d[b])}</span></td>`:`<td style="color:var(--text3)">—</td>`).join('')}
