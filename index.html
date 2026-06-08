@@ -254,7 +254,54 @@ tbody tr:hover td{background:var(--surface2)}
 tbody tr.clickable-row{cursor:pointer}
 tbody tr.clickable-row:hover td{background:var(--gold-bg)}
 
-@media(max-width:768px){.charts-grid{grid-template-columns:1fr}main{padding:20px 16px}.upload-strip{padding:10px 16px}header{padding:0 16px}.modal{max-height:95vh}.modal-header,.modal-body{padding:16px 16px}}
+/* ─── Executive tab ─── */
+.exec-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.exec-grid.three{grid-template-columns:1fr 1fr 1fr}
+.exec-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 22px;box-shadow:var(--shadow)}
+.exec-card-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:16px}
+.dso-display{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}
+.dso-val{font-size:42px;font-weight:800;line-height:1;letter-spacing:-2px}
+.dso-unit{font-size:14px;font-weight:500;color:var(--text2)}
+.dso-label{font-size:11px;color:var(--text3);margin-top:4px}
+.dso-bar{height:6px;border-radius:3px;background:var(--surface3);margin-top:12px;overflow:hidden}
+.dso-bar-fill{height:100%;border-radius:3px}
+.risk-pct{display:flex;align-items:baseline;gap:6px}
+.risk-pct-val{font-size:36px;font-weight:800;line-height:1;letter-spacing:-1px}
+.risk-pct-unit{font-size:14px;font-weight:500;color:var(--text2)}
+.risk-legend{display:flex;gap:12px;margin-top:10px;flex-wrap:wrap}
+.risk-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)}
+.alert-list{display:flex;flex-direction:column;gap:8px}
+.alert-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-radius:var(--radius);
+  border:1px solid var(--border);cursor:pointer;transition:all .15s;
+  background:var(--surface2);
+}
+.alert-item:hover{border-color:var(--gold-border);background:var(--gold-bg)}
+.alert-item.critical{border-color:rgba(160,32,32,.2);background:var(--red-bg)}
+.alert-item.critical:hover{border-color:rgba(160,32,32,.4)}
+.alert-name{font-size:13px;font-weight:500;color:var(--text);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.alert-meta{font-size:11px;color:var(--text3);margin-top:1px}
+.alert-amt{font-size:14px;font-weight:700;text-align:left}
+.alert-days{font-size:10px;font-weight:600;padding:2px 6px;border-radius:10px;margin-top:2px;display:inline-block;text-align:left}
+.heatmap-grid{display:grid;gap:3px}
+.heatmap-cell{border-radius:4px;padding:6px 8px;cursor:pointer;transition:opacity .15s;min-height:44px;display:flex;flex-direction:column;justify-content:space-between}
+.heatmap-cell:hover{opacity:.8;transform:scale(1.02)}
+.heatmap-name{font-size:10px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.heatmap-amt{font-size:12px;font-weight:700}
+.trend-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)}
+.trend-row:last-child{border-bottom:none}
+.trend-co{font-size:12px;font-weight:500;min-width:80px;color:var(--text)}
+.trend-bar-wrap{flex:1;height:20px;background:var(--surface3);border-radius:3px;overflow:hidden;display:flex}
+.trend-seg{height:100%;transition:width .5s}
+.trend-pct{font-size:11px;color:var(--text3);min-width:45px;text-align:left}
+
+@media(max-width:768px){
+  .charts-grid{grid-template-columns:1fr}
+  .exec-grid,.exec-grid.three{grid-template-columns:1fr}
+  main{padding:20px 16px}.upload-strip{padding:10px 16px}header{padding:0 16px}
+  .modal{max-height:95vh}.modal-header,.modal-body{padding:16px 16px}
+}
 </style>
 </head>
 <body>
@@ -299,16 +346,46 @@ tbody tr.clickable-row:hover td{background:var(--gold-bg)}
     <div class="kpi-row" id="kpis"></div>
 
     <div class="tabs-bar">
-      <button class="tab-btn active" onclick="swTab('summary',this)">סיכום קבוצתי</button>
+      <button class="tab-btn active" onclick="swTab('exec',this)">מבט הנהלה</button>
+      <button class="tab-btn" onclick="swTab('summary',this)">סיכום קבוצתי</button>
       <button class="tab-btn" onclick="swTab('company',this)">לפי חברה</button>
       <button class="tab-btn" onclick="swTab('client',this)">לפי לקוח</button>
       <button class="tab-btn" onclick="swTab('detail',this)">פירוט מלא</button>
     </div>
 
+    <!-- Executive View -->
+    <div id="t-exec">
+      <div class="exec-grid three" style="margin-bottom:16px">
+        <div class="exec-card">
+          <div class="exec-card-title">DSO — ממוצע ימי גביה</div>
+          <div class="dso-display"><span class="dso-val" id="dso-val">—</span><span class="dso-unit">יום</span></div>
+          <div class="dso-label" id="dso-label">ממוצע משוקלל לפי סכום</div>
+          <div class="dso-bar"><div class="dso-bar-fill" id="dso-bar" style="width:0%"></div></div>
+        </div>
+        <div class="exec-card">
+          <div class="exec-card-title">חוב בסיכון גבוה (90+ יום)</div>
+          <div class="risk-pct"><span class="risk-pct-val" id="risk-pct">—</span><span class="risk-pct-unit">%</span></div>
+          <div class="dso-label" id="risk-amt" style="margin-top:6px"></div>
+          <div class="risk-legend" id="risk-legend"></div>
+        </div>
+        <div class="exec-card">
+          <div class="exec-card-title">התפלגות סיכון</div>
+          <div id="trend-bars" style="margin-top:4px"></div>
+        </div>
+      </div>
+      <div class="exec-grid">
+        <div class="exec-card">
+          <div class="exec-card-title">⚠ דורשים טיפול מיידי — חוב מעל 180 יום</div>
+          <div class="alert-list" id="alert-list"></div>
+        </div>
+        <div class="exec-card">
+          <div class="exec-card-title">🔥 מפת חום לקוחות — סיכון × סכום</div>
+          <div id="heatmap" style="margin-top:4px"></div>
+        </div>
+      </div>
+    </div>
     <!-- Summary -->
-    <div id="t-summary">
-      <div class="charts-grid">
-        <div class="chart-card full">
+    <div id="t-summary" style="display:none">
           <div class="chart-title">חובות לפי חברה</div>
           <div class="chart-sub">פירוט סלי ימים לכל חברה</div>
           <div class="legend" id="leg1"></div>
@@ -461,7 +538,7 @@ function renderAll(){
   companies=[...new Set(allRows.map(r=>r.company))].sort();
   document.getElementById('landing').style.display='none';
   document.getElementById('dash').style.display='';
-  rKPIs();rSummary();rCompany();rClient();rDet();populateFilters();
+  rKPIs();rSummary();rCompany();rClient();rDet();rExec();populateFilters();
 }
 
 // ─── Drill-down Modal ───
@@ -684,7 +761,39 @@ function rDet(){
 }
 
 function populateFilters(){['fc','fc2'].forEach(id=>{const s=document.getElementById(id);const v=s.value;s.innerHTML='<option value="">כל החברות</option>'+companies.map(c=>`<option value="${c}"${c===v?' selected':''}>${c}</option>`).join('')})}
-function swTab(name,el){document.querySelectorAll('.tab-btn').forEach(t=>t.classList.remove('active'));el.classList.add('active');['summary','company','client','detail'].forEach(t=>{document.getElementById('t-'+t).style.display=(t===name?'':'none')})}
+function swTab(name,el){document.querySelectorAll('.tab-btn').forEach(t=>t.classList.remove('active'));el.classList.add('active');['exec','summary','company','client','detail'].forEach(t=>{document.getElementById('t-'+t).style.display=(t===name?'':'none')})}
+
+function rExec(){
+  const total=allRows.reduce((s,r)=>s+(r.amount||0),0);
+  const validRows=allRows.filter(r=>r.days!==null&&r.days>=0);
+  const wAmt=validRows.reduce((s,r)=>s+r.amount,0);
+  const dso=wAmt>0?Math.round(validRows.reduce((s,r)=>s+(r.days*r.amount),0)/wAmt):0;
+  document.getElementById('dso-val').textContent=dso;
+  const dc=dso<60?'var(--green)':dso<120?'var(--amber)':dso<180?'var(--orange)':'var(--red)';
+  document.getElementById('dso-val').style.color=dc;
+  document.getElementById('dso-label').textContent='ממוצע משוקלל · '+validRows.length+' חשבוניות · '+(dso<60?'תקין ✓':dso<120?'דורש תשומת לב':'סיכון גבוה ⚠');
+  const db=document.getElementById('dso-bar');db.style.width=Math.min(dso/270*100,100)+'%';db.style.background=dc;
+  const sums={};BUCKETS.forEach(b=>sums[b]=allRows.filter(r=>r.bucket===b).reduce((s,r)=>s+(r.amount||0),0));
+  const risk90=(sums['90-180 יום']||0)+(sums['מעל 180 יום']||0);
+  const rp=total>0?Math.round(risk90/total*100):0;
+  const re=document.getElementById('risk-pct');re.textContent=rp;re.style.color=rp<20?'var(--green)':rp<40?'var(--amber)':rp<60?'var(--orange)':'var(--red)';
+  document.getElementById('risk-amt').textContent=fmtK(risk90)+' מתוך '+fmtK(total);
+  document.getElementById('risk-legend').innerHTML=BUCKETS.map((b,i)=>'<div class="risk-item"><span style="width:8px;height:8px;border-radius:2px;background:'+BCOLORS[i]+';flex-shrink:0;display:inline-block"></span>'+b.replace(' יום','')+': '+(total>0?Math.round((sums[b]||0)/total*100):0)+'%</div>').join('');
+  const byC={};companies.forEach(c=>{byC[c]={};BUCKETS.forEach(b=>byC[c][b]=0)});
+  allRows.forEach(r=>{if(byC[r.company])byC[r.company][r.bucket]=(byC[r.company][r.bucket]||0)+(r.amount||0)});
+  document.getElementById('trend-bars').innerHTML=companies.map(c=>{const ct=BUCKETS.reduce((s,b)=>s+(byC[c][b]||0),0);if(!ct)return'';return'<div class="trend-row"><span class="trend-co">'+c+'</span><div class="trend-bar-wrap">'+BUCKETS.map((b,i)=>'<div class="trend-seg" style="width:'+Math.round((byC[c][b]||0)/ct*100)+'%;background:'+BCOLORS[i]+'"></div>').join('')+'</div><span class="trend-pct">'+fmtK(ct)+'</span></div>';}).join('');
+  const over180=allRows.filter(r=>r.bucket==='מעל 180 יום');
+  const byCl={};over180.forEach(r=>{const k=r.client||'(לא ידוע)';if(!byCl[k])byCl[k]={amt:0,days:0,co:r.company,rows:[]};byCl[k].amt+=(r.amount||0);byCl[k].rows.push(r);byCl[k].days=Math.max(byCl[k].days||0,r.days||0)});
+  const topOver=Object.entries(byCl).sort((a,b)=>b[1].amt-a[1].amt).slice(0,8);
+  if(topOver.length){document.getElementById('alert-list').innerHTML=topOver.map(([name,d])=>{const key=storeRows(d.rows);return'<div class="alert-item critical" onclick="openStored(''+key+'',''+name.replace(/'/g,"\'")+'',''+d.rows.length+' רשומות')"><div><div class="alert-name" title="'+name+'">'+name+'</div><div class="alert-meta">'+d.co+' · '+d.days+' ימים</div></div><div style="text-align:left"><div class="alert-amt" style="color:var(--red)">'+fmtK(d.amt)+'</div><span class="alert-days" style="background:var(--red-bg);color:var(--red)">180+ יום</span></div></div>';}).join('');}
+  else document.getElementById('alert-list').innerHTML='<div style="text-align:center;padding:24px;color:var(--green);font-size:13px;font-weight:500">✓ אין חובות מעל 180 יום</div>';
+  const aC={};allRows.forEach(r=>{const k=r.client||'(לא ידוע)';if(!aC[k])aC[k]={amt:0,maxBucket:0,co:r.company,rows:[]};aC[k].amt+=(r.amount||0);const bi=BUCKETS.indexOf(r.bucket);if(bi>aC[k].maxBucket)aC[k].maxBucket=bi;aC[k].rows.push(r)});
+  const tC=Object.entries(aC).sort((a,b)=>b[1].amt-a[1].amt).slice(0,20);
+  const mA=tC[0]?tC[0][1].amt:1;
+  const hmBg=[['rgba(42,157,92,.12)','#1a7a4a'],['rgba(212,134,10,.12)','#92580a'],['rgba(192,85,24,.14)','#b04010'],['rgba(184,50,50,.18)','#a02020']];
+  const hm=document.getElementById('heatmap');hm.className='heatmap-grid';hm.style.gridTemplateColumns='repeat(4,1fr)';hm.style.display='grid';
+  hm.innerHTML=tC.map(([name,d])=>{const [bg,fg]=hmBg[d.maxBucket]||hmBg[0];const minH=Math.max(44,Math.round(44+56*(d.amt/mA)));const key=storeRows(d.rows);return'<div class="heatmap-cell" style="background:'+bg+';min-height:'+minH+'px" onclick="openStored(''+key+'',''+name.replace(/'/g,"\'")+'',''+d.rows.length+' רשומות')"><div class="heatmap-name" style="color:'+fg+'" title="'+name+'">'+name+'</div><div class="heatmap-amt" style="color:'+fg+'">'+fmtK(d.amt)+'</div></div>';}).join('');
+}
 
 function exportXLSX(){
   const wb=XLSX.utils.book_new();
@@ -883,7 +992,7 @@ function rDet(){
 }
 
 function populateFilters(){['fc','fc2'].forEach(id=>{const s=document.getElementById(id);const v=s.value;s.innerHTML='<option value="">כל החברות</option>'+companies.map(c=>`<option value="${c}"${c===v?' selected':''}>${c}</option>`).join('')})}
-function swTab(name,el){document.querySelectorAll('.tab-btn').forEach(t=>t.classList.remove('active'));el.classList.add('active');['summary','company','client','detail'].forEach(t=>{document.getElementById('t-'+t).style.display=(t===name?'':'none')})}
+function swTab(name,el){document.querySelectorAll('.tab-btn').forEach(t=>t.classList.remove('active'));el.classList.add('active');['exec','summary','company','client','detail'].forEach(t=>{document.getElementById('t-'+t).style.display=(t===name?'':'none')})}
 
 function exportXLSX(){
   const wb=XLSX.utils.book_new();
