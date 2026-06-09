@@ -588,11 +588,19 @@ db.ref('data').on('value',snap=>{
 },()=>setStatus('שגיאת חיבור',false));
 
 function hFiles(files){for(const f of files){const rd=new FileReader();rd.onload=e=>{const wb=XLSX.read(e.target.result,{type:'array'});const rows=processWB(wb,f.name);if(rows.length>0)saveToFirebase(rows,f.name);else alert('לא נמצאו חובות פתוחים בקובץ: '+f.name)};rd.readAsArrayBuffer(f)}}
+function removeFile(fname){
+  if(!confirm('למחוק את "'+fname.replace(/\.(xlsx|xls)$/i,'')+'" מהדוח?'))return;
+  removeFromFirebase(fname);
+}
 function addChip(name,count){
   if(document.querySelector(`[data-f="${CSS.escape(name)}"]`))return;
   const sn=name.replace('___','').replace(/\.(xlsx|xls)$/i,'').replace(/דוח[_ ]?חייבים[_ ]?|מעודכן[_ ]?|\d{2}[._]\d{2}[._]\d{2,4}/g,'').replace(/[_\-]+/g,' ').trim();
   const c=document.createElement('div');c.className='chip';c.setAttribute('data-f',name);
-  c.innerHTML=`${sn} <span style="opacity:.4;font-size:10px">(${count})</span><span class="chip-rm" onclick="removeFromFirebase('${name.replace(/'/g,"\\'")}')">×</span>`;
+  const rm=document.createElement('span');
+  rm.className='chip-rm';rm.textContent='×';rm.title='הסר קובץ זה';
+  rm.addEventListener('click',()=>removeFile(name));
+  c.innerHTML=`${sn} <span style="opacity:.4;font-size:10px">(${count})</span>`;
+  c.appendChild(rm);
   document.getElementById('chips').appendChild(c);
 }
 
