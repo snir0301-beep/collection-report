@@ -651,6 +651,47 @@ function renderAll(){
   rKPIs();rSummary();rCompany();rClient();rDet();rExec();populateFilters();
 }
 
+// ─── Firebase listener ───
+let _fbConnected=false;
+const _fbTimeout=setTimeout(()=>{
+  if(!_fbConnected){
+    setStatus('לא ניתן להתחבר לענן',false);
+    document.getElementById('landing').innerHTML=`
+      <div class="landing-eyebrow">Collection Report</div>
+      <div class="landing-title">לא ניתן להתחבר</div>
+      <div class="landing-sub" style="color:var(--red)">הרשת חוסמת את Firebase.<br>העלה קבצים ידנית — הנתונים יישמרו מקומית בלבד.</div>`;
+  }
+},8000);
+
+db.ref('data').on('value',snap=>{
+  _fbConnected=true;
+  clearTimeout(_fbTimeout);
+  const val=snap.val();
+  allRows=[];
+  document.getElementById('chips').innerHTML='';
+  _fileRegistry={};
+  if(val){
+    Object.values(val).forEach(e=>{
+      if(e&&e.rows){
+        allRows=allRows.concat(e.rows);
+        addChip(e.fname,e.rows.length);
+      }
+    });
+    if(allRows.length>0){
+      document.getElementById('landing').style.display='none';
+      document.getElementById('dash').style.display='';
+      renderAll();
+    } else {
+      document.getElementById('dash').style.display='none';
+      document.getElementById('landing').style.display='';
+    }
+  } else {
+    document.getElementById('dash').style.display='none';
+    document.getElementById('landing').style.display='';
+  }
+  setStatus('מסונכרן ✓',true);
+},()=>setStatus('שגיאת חיבור',false));
+
 // ─── Drill-down Modal ───
 function openModal(rows, title, meta){
   modalRows=rows;
