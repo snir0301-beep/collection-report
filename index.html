@@ -498,8 +498,10 @@ function detectCols(h){
 }
 function processWB(wb,fname){
   let cname=fname.replace(/\.(xlsx|xls)$/i,'').replace(/___/g,'')
-    .replace(/דוח[_ ]?ח(ייבים|שבונות[_ ]?פתוחים)[_ ]?/g,'').replace(/מעודכן[_ ]?/g,'')
-    .replace(/\d{2}[._\-]\d{2}[._\-]\d{2,4}/g,'').replace(/[_\-]+/g,' ').trim()||fname;
+    .replace(/דוח[_ ]?(חייבים|חשבונות[_ ]?פתוחים)[_ ]?/g,'')
+    .replace(/מעודכן[_ ]?/g,'')
+    .replace(/\d{2}[._\-]\d{2}[._\-]\d{2,4}/g,'')
+    .replace(/[_\-]+/g,' ').trim()||fname;
   const sn=wb.SheetNames.find(s=>s.includes('ריכוז חובות'))
     ||wb.SheetNames.find(s=>s.includes('REP_Bill')||s.includes('Collection')||s.includes('גביה'))
     ||wb.SheetNames.find(s=>!s.startsWith('תרשים'));
