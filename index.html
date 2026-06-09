@@ -329,7 +329,21 @@ tbody tr.clickable-row:hover td{background:var(--gold-bg)}
   <div class="strip-actions">
     <button class="btn-sm" onclick="exportXLSX()">⬇ אקסל</button>
     <button class="btn-sm" onclick="exportHTML()">🌐 HTML</button>
-    <button class="btn-sm danger" onclick="clearData()">✕ נקה</button>
+    <button class="btn-sm danger" onclick="openDeleteModal()">🗑 מחיקת נתונים</button>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal-overlay" id="delete-overlay" onclick="if(event.target===this)closeDeleteModal()" style="z-index:1001">
+  <div class="modal" style="max-height:60vh">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">מחיקת נתונים</div>
+        <div class="modal-meta">בחר קובץ למחיקה או מחק הכל</div>
+      </div>
+      <button class="modal-close" onclick="closeDeleteModal()">×</button>
+    </div>
+    <div class="modal-body" id="delete-list" style="padding:16px 28px"></div>
   </div>
 </div>
 
@@ -576,33 +590,52 @@ function processWB(wb,fname){
 function setStatus(txt,ok){document.getElementById('fb-txt').textContent=txt;document.getElementById('fb-dot').style.background=ok?'#6ee7a0':'#f87171'}
 function saveToFirebase(rows,fname){const key=fname.replace(/[.#$/\[\]]/g,'_');setStatus('שומר...',true);db.ref('data/'+key).set({rows,uploadedAt:Date.now(),fname}).then(()=>setStatus('מסונכרן ✓',true)).catch(()=>setStatus('שגיאת שמירה',false))}
 function removeFromFirebase(fname){db.ref('data/'+fname.replace(/[.#$/\[\]]/g,'_')).remove()}
-function clearData(){if(!confirm('למחוק את כל הנתונים השמורים לכולם?'))return;db.ref('data').remove().then(()=>{allRows=[];document.getElementById('chips').innerHTML='';document.getElementById('dash').style.display='none';document.getElementById('landing').style.display='';setStatus('נוקה ✓',true)})}
+let _fileRegistry={};
 
-db.ref('data').on('value',snap=>{
-  const val=snap.val();allRows=[];document.getElementById('chips').innerHTML='';
-  if(val){Object.values(val).forEach(e=>{if(e&&e.rows){allRows=allRows.concat(e.rows);addChip(e.fname,e.rows.length)}});
-    if(allRows.length>0){document.getElementById('landing').style.display='none';document.getElementById('dash').style.display='';renderAll()}
-    else{document.getElementById('dash').style.display='none';document.getElementById('landing').style.display=''}}
-  else{document.getElementById('dash').style.display='none';document.getElementById('landing').style.display=''}
-  setStatus('מסונכרן ✓',true)
-},()=>setStatus('שגיאת חיבור',false));
+function clearData(){if(!confirm('למחוק את כל הנתונים לכולם?'))return;db.ref('data').remove().then(()=>{allRows=[];_fileRegistry={};document.getElementById('chips').innerHTML='';document.getElementById('dash').style.display='none';document.getElementById('landing').style.display='';closeDeleteModal();setStatus('נוקה ✓',true)})}
 
 function hFiles(files){for(const f of files){const rd=new FileReader();rd.onload=e=>{const wb=XLSX.read(e.target.result,{type:'array'});const rows=processWB(wb,f.name);if(rows.length>0)saveToFirebase(rows,f.name);else alert('לא נמצאו חובות פתוחים בקובץ: '+f.name)};rd.readAsArrayBuffer(f)}}
-function removeFile(fname){
-  if(!confirm('למחוק את "'+fname.replace(/\.(xlsx|xls)$/i,'')+'" מהדוח?'))return;
-  removeFromFirebase(fname);
-}
+
 function addChip(name,count){
-  if(document.querySelector(`[data-f="${CSS.escape(name)}"]`))return;
+  _fileRegistry[name]={fname:name,count};
+  if(document.querySelector('[data-f="'+CSS.escape(name)+'"]'))return;
   const sn=name.replace('___','').replace(/\.(xlsx|xls)$/i,'').replace(/דוח[_ ]?חייבים[_ ]?|מעודכן[_ ]?|\d{2}[._]\d{2}[._]\d{2,4}/g,'').replace(/[_\-]+/g,' ').trim();
   const c=document.createElement('div');c.className='chip';c.setAttribute('data-f',name);
-  const rm=document.createElement('span');
-  rm.className='chip-rm';rm.textContent='×';rm.title='הסר קובץ זה';
-  rm.addEventListener('click',()=>removeFile(name));
-  c.innerHTML=`${sn} <span style="opacity:.4;font-size:10px">(${count})</span>`;
-  c.appendChild(rm);
+  c.textContent=sn+' ';
+  const cnt=document.createElement('span');cnt.style.cssText='opacity:.4;font-size:10px';cnt.textContent='('+count+')';
+  c.appendChild(cnt);
   document.getElementById('chips').appendChild(c);
 }
+
+function openDeleteModal(){
+  const files=Object.values(_fileRegistry);
+  const list=document.getElementById('delete-list');
+  let h='<div style="display:flex;flex-direction:column;gap:8px">';
+  if(!files.length){h+='<div style="text-align:center;color:var(--text3);padding:20px">אין נתונים טעונים</div>';}
+  else{
+    files.forEach(({fname,count})=>{
+      const sn=fname.replace('___','').replace(/\.(xlsx|xls)$/i,'').replace(/דוח[_ ]?חייבים[_ ]?|מעודכן[_ ]?|\d{2}[._]\d{2}[._]\d{2,4}/g,'').replace(/[_\-]+/g,' ').trim();
+      h+='<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--surface2);border-radius:var(--radius);border:1px solid var(--border)">'
+        +'<div><div style="font-size:13px;font-weight:500">'+sn+'</div><div style="font-size:11px;color:var(--text3);margin-top:2px">'+count+' רשומות</div></div>'
+        +'<button class="btn-sm danger" data-fname="'+fname.replace(/"/g,'&quot;')+'" onclick="removeOneFile(this)">🗑 מחק</button>'
+        +'</div>';
+    });
+    h+='<div style="border-top:1px solid var(--border);margin-top:4px;padding-top:12px">'
+      +'<button class="btn-sm danger" style="width:100%;justify-content:center;padding:10px" onclick="clearData()">🗑 מחק הכל</button>'
+      +'</div>';
+  }
+  h+='</div>';
+  list.innerHTML=h;
+  document.getElementById('delete-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function removeOneFile(btn){
+  const fname=btn.getAttribute('data-fname');
+  if(!confirm('למחוק את "'+fname.replace(/\.(xlsx|xls)$/i,'')+'"?'))return;
+  removeFromFirebase(fname);
+  closeDeleteModal();
+}
+function closeDeleteModal(){document.getElementById('delete-overlay').classList.remove('open');document.body.style.overflow=''}
 
 function renderAll(){
   companies=[...new Set(allRows.map(r=>r.company))].sort();
