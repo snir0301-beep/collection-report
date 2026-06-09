@@ -504,6 +504,7 @@ function detectCols(h){
     date:      f('תאריך הגשה','תאריך חשבון','תאריך תשלום','תאריך'),
     monthCol:  f('בגין חודש'),
     daysDelay: f('ימי פיגור'),
+    payStatus: f('מצב תשלום'),
     client:    f('תאור','מזמין','שם לקוח','לקוח'),
     project:   f('פרטים','שם פרויקט','שם הפרויקט','שם פרוייקט'),
     amount:    f("סה'כ לפני",'סה"כ לפני','סך חשבון','הפרש תשלום','יתרה לתשלום','חוב לחשבונית','סכום החשבונית'),
@@ -520,9 +521,10 @@ function processWB(wb,fname){
     .replace(/[0-9a-fA-F]{8,}/g,'')
     .replace(/[_\-]+/g,' ').trim()||fname;
 
-  const sn=wb.SheetNames.find(s=>s.includes('ריכוז חובות'))
+  const sn=wb.SheetNames.find(s=>s.includes('חשבונות פתוחים'))
+    ||wb.SheetNames.find(s=>s.includes('ריכוז חובות'))
     ||wb.SheetNames.find(s=>s.includes('REP_Bill')||s.includes('Collection')||s.includes('גביה')||s==='DataSheet')
-    ||wb.SheetNames.find(s=>!s.startsWith('תרשים'));
+    ||wb.SheetNames.find(s=>!s.startsWith('תרשים')&&!s.startsWith('גיליון')&&s!=='DICTIONARY');
   if(!sn)return[];
   const ws=wb.Sheets[sn];
   const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:null,raw:true});
@@ -536,15 +538,21 @@ function processWB(wb,fname){
   if(cols.amount<0)return[];
 
   // Detect format
-  const isAtgar  = cols.monthCol>=0;                            // אתגר: has בגין חודש
-  const isIshtern= cols.daysDelay>=0&&cols.monthCol<0&&cols.period<0; // אישטרן: has ימי פיגור
-  const isAES    = !isAtgar&&!isIshtern&&cols.period<0&&cols.date>=0; // עמוס חלפון
+  const isPGL  = cols.payStatus>=0&&cols.monthCol<0&&cols.daysDelay<0&&cols.period<0; // PGL: מצב תשלום כן/לא
+  const isAtgar  = cols.monthCol>=0;
+  const isIshtern= cols.daysDelay>=0&&cols.monthCol<0&&cols.period<0;
+  const isAES    = !isPGL&&!isAtgar&&!isIshtern&&cols.period<0&&cols.date>=0;
 
   const rows=[];
   for(let i=hr+1;i<data.length;i++){
     const r=data[i];if(!r)continue;
     let days=null;
-    if(isIshtern){
+    if(isPGL){
+      // PGL: filter by מצב תשלום = לא, use תאריך הוצאת החשבון
+      const pv=cols.payStatus>=0?(r[cols.payStatus]||'').toString().trim():'';
+      if(pv!=='לא')continue;
+      days=cols.date>=0?daysOldFromDate(r[cols.date]):null;
+    } else if(isIshtern){
       // אישטרן: ימי פיגור is pre-calculated
       const dv=r[cols.daysDelay];
       if(dv===null||dv===undefined)continue;
@@ -572,8 +580,8 @@ function processWB(wb,fname){
     }
     if(!amt||amt<=0)continue; // skip zero and negative (cancellations)
 
-    const comp=isAES?cname:((cols.company>=0&&r[cols.company])?r[cols.company].toString().split('  ')[0].trim():cname);
-    const period=(isAES||isAtgar||isIshtern)?'':(r[cols.period]||'').toString().trim();
+    const comp=(isAES||isPGL)?cname:((cols.company>=0&&r[cols.company])?r[cols.company].toString().split('  ')[0].trim():cname);
+    const period=(isAES||isAtgar||isIshtern||isPGL)?'':(r[cols.period]||'').toString().trim();
     // For אישטרן, notes col is same as project — use פרטים for both
     const notesVal=cols.notes>=0&&cols.notes!==cols.project?(r[cols.notes]||'').toString().substring(0,200):'';
     rows.push({
