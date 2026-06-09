@@ -537,7 +537,10 @@ function processWB(wb,fname){
       days=daysOld(period.toString().trim());
     }
     let amt=r[cols.amount];
-    if(amt!==null&&amt!==undefined){amt=parseFloat(amt);if(isNaN(amt))amt=null}
+    if(amt!==null&&amt!==undefined){
+      if(typeof amt==='string'&&amt.startsWith('='))continue; // skip formula rows
+      amt=parseFloat(amt);if(isNaN(amt))amt=null;
+    }
     if(!amt||amt<=0)continue;
     const comp=isAES?cname:((cols.company>=0&&r[cols.company])?r[cols.company].toString().split('  ')[0].trim():cname);
     const period=(isAES||isAtgar)?'':(r[cols.period]||'').toString().trim();
