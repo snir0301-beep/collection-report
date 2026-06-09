@@ -485,15 +485,16 @@ function bkt(d){if(d===null||d===undefined||isNaN(d))return'לא ידוע';if(d<
 function detectCols(h){
   const f=(...opts)=>{for(const o of opts){const i=h.findIndex(x=>(x||'').toString().includes(o));if(i>=0)return i}return -1};
   return{
-    company:f('שם החברה','לקוח פנימי'),
-    period:f('פעילות לחודש'),
-    date:f('תאריך הגשה','תאריך חשבון','תאריך'),
-    monthCol:f('בגין חודש'),
-    client:f('מזמין','שם לקוח','לקוח'),
-    project:f('שם פרויקט','שם הפרויקט','שם פרוייקט'),
-    amount:f('סך חשבון','הפרש תשלום','יתרה לתשלום','סכום בסיס'),
-    paid:f('שולם/לא שולם'),
-    notes:f('הערות גביה','הערות')
+    company:   f('שם החברה','לקוח פנימי'),
+    period:    f('פעילות לחודש'),
+    date:      f('תאריך הגשה','תאריך חשבון','תאריך תשלום','תאריך'),
+    monthCol:  f('בגין חודש'),
+    daysDelay: f('ימי פיגור'),
+    client:    f('תאור','מזמין','שם לקוח','לקוח'),
+    project:   f('פרטים','שם פרויקט','שם הפרויקט','שם פרוייקט'),
+    amount:    f("סה'כ לפני מע'מ",'סך חשבון','הפרש תשלום','יתרה לתשלום','חוב לחשבונית','סכום החשבונית'),
+    paid:      f('שולם/לא שולם'),
+    notes:     f('הערות גביה','הערות','פרטים')
   };
 }
 function processWB(wb,fname){
@@ -501,57 +502,72 @@ function processWB(wb,fname){
     .replace(/דוח[_ ]?(חייבים|חשבונות[_ ]?פתוחים)[_ ]?/g,'')
     .replace(/מעודכן[_ ]?/g,'')
     .replace(/\d{2}[._\-]\d{2}[._\-]\d{2,4}/g,'')
+    .replace(/גיול[_ ]?מפורט[_ ]?-?[_ ]?הנדסה[_ ]?-?[_ ]?עם[_ ]?סכום[_ ]?לפני[_ ]?/gi,'')
+    .replace(/[0-9a-fA-F]{8,}/g,'')
     .replace(/[_\-]+/g,' ').trim()||fname;
+
   const sn=wb.SheetNames.find(s=>s.includes('ריכוז חובות'))
-    ||wb.SheetNames.find(s=>s.includes('REP_Bill')||s.includes('Collection')||s.includes('גביה'))
+    ||wb.SheetNames.find(s=>s.includes('REP_Bill')||s.includes('Collection')||s.includes('גביה')||s==='DataSheet')
     ||wb.SheetNames.find(s=>!s.startsWith('תרשים'));
   if(!sn)return[];
   const ws=wb.Sheets[sn];
   const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:null,raw:true});
   let hr=-1;
-  const KEY_COLS=['פעילות לחודש','תאריך חשבון','תאריך הגשה','יתרה לתשלום','הפרש תשלום','סך חשבון','בגין חודש'];
+  const KEY_COLS=['פעילות לחודש','תאריך חשבון','תאריך הגשה','תאריך תשלום','יתרה לתשלום','הפרש תשלום','סך חשבון','בגין חודש','ימי פיגור',"סה'כ לפני מע'מ",'חוב לחשבונית'];
   for(let i=0;i<Math.min(10,data.length);i++){
     if(data[i]&&KEY_COLS.some(k=>data[i].some(c=>c&&c.toString().includes(k)))){hr=i;break}
   }
   if(hr<0)return[];
   const cols=detectCols(data[hr]);
   if(cols.amount<0)return[];
-  // Detect format type
-  const isAES=cols.period<0&&cols.date>=0&&cols.monthCol<0;   // עמוס חלפון: date col, no period, no monthCol
-  const isAtgar=cols.monthCol>=0;                              // אתגר: has בגין חודש
+
+  // Detect format
+  const isAtgar  = cols.monthCol>=0;                            // אתגר: has בגין חודש
+  const isIshtern= cols.daysDelay>=0&&cols.monthCol<0&&cols.period<0; // אישטרן: has ימי פיגור
+  const isAES    = !isAtgar&&!isIshtern&&cols.period<0&&cols.date>=0; // עמוס חלפון
+
   const rows=[];
   for(let i=hr+1;i<data.length;i++){
     const r=data[i];if(!r)continue;
     let days=null;
-    if(isAtgar){
-      // אתגר: use בגין חודש (Date object) for aging
+    if(isIshtern){
+      // אישטרן: ימי פיגור is pre-calculated
+      const dv=r[cols.daysDelay];
+      if(dv===null||dv===undefined)continue;
+      days=parseInt(dv);
+      if(isNaN(days)||days<0)continue;
+    } else if(isAtgar){
       const mv=r[cols.monthCol];if(!mv)continue;
       days=daysOldFromDate(mv);
     } else if(isAES){
       const dv=r[cols.date];if(!dv)continue;
       days=daysOldFromDate(dv);
     } else {
-      // Standard format
+      // Standard
       const period=r[cols.period];
       if(!period||!period.toString().match(/\d{2}\/\d{2}/))continue;
       const pv=cols.paid>=0?(r[cols.paid]||'').toString().replace(/\s/g,''):'';
       if(pv!=='ל')continue;
       days=daysOld(period.toString().trim());
     }
+
     let amt=r[cols.amount];
     if(amt!==null&&amt!==undefined){
-      if(typeof amt==='string'&&amt.startsWith('='))continue; // skip formula rows
+      if(typeof amt==='string'&&amt.startsWith('='))continue;
       amt=parseFloat(amt);if(isNaN(amt))amt=null;
     }
-    if(!amt||amt<=0)continue;
+    if(!amt||amt<=0)continue; // skip zero and negative (cancellations)
+
     const comp=isAES?cname:((cols.company>=0&&r[cols.company])?r[cols.company].toString().split('  ')[0].trim():cname);
-    const period=(isAES||isAtgar)?'':(r[cols.period]||'').toString().trim();
-    const notes=cols.notes>=0?(r[cols.notes]||'').toString().substring(0,200):'';
+    const period=(isAES||isAtgar||isIshtern)?'':(r[cols.period]||'').toString().trim();
+    // For אישטרן, notes col is same as project — use פרטים for both
+    const notesVal=cols.notes>=0&&cols.notes!==cols.project?(r[cols.notes]||'').toString().substring(0,200):'';
     rows.push({
-      company:comp||cname,period,
+      company:comp||cname, period,
       client:(cols.client>=0?(r[cols.client]||''):'').toString(),
       project:(cols.project>=0?(r[cols.project]||''):'').toString(),
-      amount:amt,notes:notes.split('\n')[0],days,bucket:bkt(days),src:fname
+      amount:amt, notes:notesVal.split('\n')[0],
+      days, bucket:bkt(days), src:fname
     });
   }
   return rows;
