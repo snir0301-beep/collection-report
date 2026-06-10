@@ -574,7 +574,7 @@ function processWB(wb,fname){
     ||wb.SheetNames.find(s=>!s.startsWith('תרשים')&&!s.startsWith('גיליון')&&s!=='DICTIONARY');
   if(!sn)return[];
   const ws=wb.Sheets[sn];
-  const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:null,raw:true});
+  const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:null,raw:false});
   let hr=-1;
   const KEY_COLS=['פעילות לחודש','תאריך חשבון','תאריך הגשה','תאריך תשלום','יתרה לתשלום','הפרש תשלום','סך חשבון','בגין חודש','ימי פיגור',"סה'כ לפני מע'מ",'חוב לחשבונית'];
   for(let i=0;i<Math.min(10,data.length);i++){
@@ -669,7 +669,7 @@ let _fileRegistry={};
 
 function clearData(){if(!confirm('למחוק את הנתונים הנוכחיים? (הסנאפשוטים נשמרים)'))return;db.ref('data/current').remove().then(()=>{allRows=[];_fileRegistry={};document.getElementById('chips').innerHTML='';document.getElementById('dash').style.display='none';document.getElementById('landing').style.display='';closeDeleteModal();setStatus('נוקה ✓',true)})}
 
-function hFiles(files){for(const f of files){const rd=new FileReader();rd.onload=e=>{const wb=XLSX.read(e.target.result,{type:'array',cellFormula:false,cellNF:false});const rows=processWB(wb,f.name);if(rows.length>0)saveToFirebase(rows,f.name);else alert('לא נמצאו חובות פתוחים בקובץ: '+f.name)};rd.readAsArrayBuffer(f)}}
+function hFiles(files){for(const f of files){const rd=new FileReader();rd.onload=e=>{const wb=XLSX.read(e.target.result,{type:'array',cellFormula:true,cellNF:false,cellDates:true});const rows=processWB(wb,f.name);if(rows.length>0)saveToFirebase(rows,f.name);else alert('לא נמצאו חובות פתוחים בקובץ: '+f.name)};rd.readAsArrayBuffer(f)}}
 
 function addChip(name,count){
   _fileRegistry[name]={fname:name,count};
