@@ -551,7 +551,9 @@ function detectCols(h){
     payStatus: f('מצב תשלום'),
     client:    f('תאור','מזמין','שם לקוח','לקוח'),
     project:   f('פרטים','שם פרויקט','שם הפרויקט','שם פרוייקט'),
-    amount:    f("סה'כ לפני",'סה"כ לפני','סך חשבון','הפרש תשלום','יתרה לתשלום','חוב לחשבונית','סכום החשבונית'),
+    amount:    f('יתרה לתשלום','סה"כ לפני','סה\'כ לפני',"סה'כ לפני",'סך חשבון','הפרש תשלום','חוב לחשבונית','סכום החשבונית','סכום לפני'),
+    amountBase:f('סכום לפני מע'),
+    amountPaid:f('שולם'),
     paid:      f('שולם/לא שולם'),
     notes:     f('הערות גביה','הערות','פרטים')
   };
@@ -618,8 +620,14 @@ function processWB(wb,fname){
 
     let amt=r[cols.amount];
     if(amt!==null&&amt!==undefined){
-      if(typeof amt==='string'&&amt.startsWith('='))continue;
-      amt=parseFloat(amt);if(isNaN(amt))amt=null;
+      if(typeof amt==='string'&&amt.startsWith('=')){
+        // Formula cell — calculate from base - paid
+        const base=cols.amountBase>=0?parseFloat(r[cols.amountBase]||0):0;
+        const paid=cols.amountPaid>=0?parseFloat(r[cols.amountPaid]||0):0;
+        amt=base-paid;
+      } else {
+        amt=parseFloat(amt);if(isNaN(amt))amt=null;
+      }
     }
     if(!amt||amt<=0)continue; // skip zero and negative (cancellations)
 
