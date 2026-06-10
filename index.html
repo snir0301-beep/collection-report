@@ -596,7 +596,7 @@ function processWB(wb,fname){
     let days=null;
     if(isPGL){
       const pv=cols.payStatus>=0?(r[cols.payStatus]||'').toString().trim():'';
-      if(pv!=='לא')continue;
+      if(pv!=='לא'&&pv!=='חלקי')continue;
       const dateCol=cols.invoiceDate>=0?cols.invoiceDate:cols.date;
       days=dateCol>=0?daysOldFromDate(r[dateCol]):null;
     } else if(isIshtern){
