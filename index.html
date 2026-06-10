@@ -574,7 +574,7 @@ function processWB(wb,fname){
     ||wb.SheetNames.find(s=>!s.startsWith('תרשים')&&!s.startsWith('גיליון')&&s!=='DICTIONARY');
   if(!sn)return[];
   const ws=wb.Sheets[sn];
-  const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:null,raw:false});
+  const data=XLSX.utils.sheet_to_json(ws,{header:1,defval:null,raw:true});
   let hr=-1;
   const KEY_COLS=['פעילות לחודש','תאריך חשבון','תאריך הגשה','תאריך תשלום','יתרה לתשלום','הפרש תשלום','סך חשבון','בגין חודש','ימי פיגור',"סה'כ לפני מע'מ",'חוב לחשבונית'];
   for(let i=0;i<Math.min(10,data.length);i++){
@@ -623,10 +623,20 @@ function processWB(wb,fname){
     let amt=r[cols.amount];
     if(amt!==null&&amt!==undefined){
       if(typeof amt==='string'&&amt.startsWith('=')){
-        // Formula cell — calculate from base - paid
-        const base=cols.amountBase>=0?parseFloat(r[cols.amountBase]||0):0;
-        const paid=cols.amountPaid>=0?parseFloat(r[cols.amountPaid]||0):0;
-        amt=base-paid;
+        // Formula cell — try to evaluate simple A-B formulas like =N5-P5
+        const fmatch=amt.match(/^=([A-Z]+)\d+\s*[-+]\s*([A-Z]+)\d+$/);
+        if(fmatch){
+          // Convert column letters to 0-based index
+          const colIdx=s=>{let n=0;for(const c of s)n=n*26+(c.charCodeAt(0)-64);return n-1;};
+          const v1=parseFloat(r[colIdx(fmatch[1])]||0);
+          const v2=parseFloat(r[colIdx(fmatch[2])]||0);
+          amt=amt.includes('-')?v1-v2:v1+v2;
+        } else {
+          // Can't evaluate — use amountBase - amountPaid fallback
+          const base=cols.amountBase>=0?parseFloat(r[cols.amountBase]||0):0;
+          const paid=cols.amountPaid>=0?parseFloat(r[cols.amountPaid]||0):0;
+          amt=base-paid;
+        }
       } else {
         amt=parseFloat(amt);if(isNaN(amt))amt=null;
       }
