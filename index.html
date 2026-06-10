@@ -1210,7 +1210,7 @@ function renderAll(){
   const dc=dso<60?'var(--green)':dso<120?'var(--amber)':dso<180?'var(--orange)':'var(--red)';
   document.getElementById('dso-val').style.color=dc;
   document.getElementById('dso-label').textContent='ממוצע משוקלל · '+validRows.length+' חשבוניות · '+(dso<60?'תקין ✓':dso<120?'דורש תשומת לב':'סיכון גבוה ⚠');
-  const db=document.getElementById('dso-bar');db.style.width=Math.min(dso/270*100,100)+'%';db.style.background=dc;
+  const dsoBar=document.getElementById('dso-bar');dsoBar.style.width=Math.min(dso/270*100,100)+'%';dsoBar.style.background=dc;
   const sums={};BUCKETS.forEach(b=>sums[b]=allRows.filter(r=>r.bucket===b).reduce((s,r)=>s+(r.amount||0),0));
   const risk90=(sums['90-180 יום']||0)+(sums['מעל 180 יום']||0);
   const rp=total>0?Math.round(risk90/total*100):0;
