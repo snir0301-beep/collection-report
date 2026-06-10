@@ -737,40 +737,40 @@ db.ref('data/current').on('value',snap=>{
   }
 
   if(val){
-    // New path: data/current
     processEntries(val);
+    finish();
   } else {
-    // Fallback: try old path data/ (migration)
+    // Fallback: check old path data/ for migration
     db.ref('data').once('value').then(oldSnap=>{
       const oldVal=oldSnap.val();
-      if(oldVal&&typeof oldVal==='object'&&!oldVal.current){
-        // Old format — migrate to new path
-        const entries=Object.entries(oldVal).filter(([k,v])=>v&&v.rows);
-        if(entries.length>0){
-          const updates={};
-          entries.forEach(([k,v])=>{updates['data/current/'+k]=v;});
-          db.ref().update(updates).then(()=>db.ref('data').remove());
-          processEntries(Object.fromEntries(entries));
-        }
+      if(!oldVal){finish();return;}
+      // Check if old format (files directly under data/, not under data/current)
+      const entries=Object.entries(oldVal).filter(([k,v])=>k!=='current'&&k!=='snapshots'&&v&&typeof v==='object'&&v.rows);
+      if(entries.length>0){
+        // Migrate each entry to data/current
+        const promises=entries.map(([k,v])=>db.ref('data/current/'+k).set(v));
+        Promise.all(promises).then(()=>{
+          // Remove old entries (not current or snapshots)
+          entries.forEach(([k])=>db.ref('data/'+k).remove());
+        });
+        processEntries(Object.fromEntries(entries));
       }
-      if(allRows.length>0){
-        document.getElementById('landing').style.display='none';
-        document.getElementById('dash').style.display='';
-        renderAll();loadSnapshots();
-      }
-    });
+      finish();
+    }).catch(()=>finish());
     return;
   }
 
-  if(allRows.length>0){
-    document.getElementById('landing').style.display='none';
-    document.getElementById('dash').style.display='';
-    renderAll();loadSnapshots();
-  } else {
-    document.getElementById('dash').style.display='none';
-    document.getElementById('landing').style.display='';
+  function finish(){
+    if(allRows.length>0){
+      document.getElementById('landing').style.display='none';
+      document.getElementById('dash').style.display='';
+      renderAll();loadSnapshots();
+    } else {
+      document.getElementById('dash').style.display='none';
+      document.getElementById('landing').style.display='';
+    }
+    setStatus('מסונכרן ✓',true);
   }
-  setStatus('מסונכרן ✓',true);
 },()=>setStatus('שגיאת חיבור',false));
 
 // ─── Snapshot / Comparison ───
