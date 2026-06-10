@@ -621,22 +621,18 @@ function processWB(wb,fname){
     }
 
     let amt=r[cols.amount];
-    if(amt!==null&&amt!==undefined){
+    // PGL: יתרה לתשלום is a formula =N-P, compute directly
+    if(isPGL){
+      const base=parseFloat(r[cols.amountBase]||0)||0;
+      const paid=parseFloat(r[cols.amountPaid]||0)||0;
+      amt=base-paid;
+    } else if(amt!==null&&amt!==undefined){
       if(typeof amt==='string'&&amt.startsWith('=')){
-        // Formula cell — try to evaluate simple A-B formulas like =N5-P5
-        const fmatch=amt.match(/^=([A-Z]+)\d+\s*[-+]\s*([A-Z]+)\d+$/);
-        if(fmatch){
-          // Convert column letters to 0-based index
-          const colIdx=s=>{let n=0;for(const c of s)n=n*26+(c.charCodeAt(0)-64);return n-1;};
-          const v1=parseFloat(r[colIdx(fmatch[1])]||0);
-          const v2=parseFloat(r[colIdx(fmatch[2])]||0);
-          amt=amt.includes('-')?v1-v2:v1+v2;
-        } else {
-          // Can't evaluate — use amountBase - amountPaid fallback
-          const base=cols.amountBase>=0?parseFloat(r[cols.amountBase]||0):0;
-          const paid=cols.amountPaid>=0?parseFloat(r[cols.amountPaid]||0):0;
-          amt=base-paid;
-        }
+        const fm=amt.match(/^=([A-Z]+)\d+\s*([-+])\s*([A-Z]+)\d+$/);
+        if(fm){
+          const ci=s=>{let n=0;for(const c of s)n=n*26+(c.charCodeAt(0)-64);return n-1};
+          amt=fm[2]==='-'?parseFloat(r[ci(fm[1])]||0)-parseFloat(r[ci(fm[3])]||0):parseFloat(r[ci(fm[1])]||0)+parseFloat(r[ci(fm[3])]||0);
+        } else {amt=null;}
       } else {
         amt=parseFloat(amt);if(isNaN(amt))amt=null;
       }
