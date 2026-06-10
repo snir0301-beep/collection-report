@@ -740,24 +740,8 @@ db.ref('data/current').on('value',snap=>{
     processEntries(val);
     finish();
   } else {
-    // Fallback: check old path data/ for migration
-    db.ref('data').once('value').then(oldSnap=>{
-      const oldVal=oldSnap.val();
-      if(!oldVal){finish();return;}
-      // Check if old format (files directly under data/, not under data/current)
-      const entries=Object.entries(oldVal).filter(([k,v])=>k!=='current'&&k!=='snapshots'&&v&&typeof v==='object'&&v.rows);
-      if(entries.length>0){
-        // Migrate each entry to data/current
-        const promises=entries.map(([k,v])=>db.ref('data/current/'+k).set(v));
-        Promise.all(promises).then(()=>{
-          // Remove old entries (not current or snapshots)
-          entries.forEach(([k])=>db.ref('data/'+k).remove());
-        });
-        processEntries(Object.fromEntries(entries));
-      }
-      finish();
-    }).catch(()=>finish());
-    return;
+    // No data in current path
+    finish();
   }
 
   function finish(){
