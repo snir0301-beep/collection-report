@@ -546,6 +546,7 @@ function detectCols(h){
     company:   f('שם החברה','לקוח פנימי'),
     period:    f('פעילות לחודש'),
     date:      f('תאריך הגשה','תאריך חשבון','תאריך תשלום','תאריך'),
+    invoiceDate:f('תאריך הוצאת החשבון','תאריך חשבונית'),
     monthCol:  f('בגין חודש'),
     daysDelay: f('ימי פיגור'),
     payStatus: f('מצב תשלום'),
@@ -596,7 +597,8 @@ function processWB(wb,fname){
     if(isPGL){
       const pv=cols.payStatus>=0?(r[cols.payStatus]||'').toString().trim():'';
       if(pv!=='לא')continue;
-      days=cols.date>=0?daysOldFromDate(r[cols.date]):null;
+      const dateCol=cols.invoiceDate>=0?cols.invoiceDate:cols.date;
+      days=dateCol>=0?daysOldFromDate(r[dateCol]):null;
     } else if(isIshtern){
       // אישטרן: ימי פיגור is pre-calculated
       const dv=r[cols.daysDelay];
