@@ -1196,12 +1196,7 @@ function rDet(){
 
 function populateFilters(){['fc','fc2'].forEach(id=>{const s=document.getElementById(id);const v=s.value;s.innerHTML='<option value="">כל החברות</option>'+companies.map(c=>`<option value="${c}"${c===v?' selected':''}>${c}</option>`).join('')})}
 function swTab(name,el){document.querySelectorAll('.tab-btn').forEach(t=>t.classList.remove('active'));el.classList.add('active');['exec','compare','summary','company','client','detail'].forEach(t=>{document.getElementById('t-'+t).style.display=(t===name?'':'none')})}
-function renderAll(){
-  companies=[...new Set(allRows.map(r=>r.company))].sort();
-  document.getElementById('landing').style.display='none';
-  document.getElementById('dash').style.display='';
-  rKPIs();rSummary();rCompany();rClient();rDet();rExec();populateFilters();
-}
+function rExec(){
   const total=allRows.reduce((s,r)=>s+(r.amount||0),0);
   const validRows=allRows.filter(r=>r.days!==null&&r.days>=0);
   const wAmt=validRows.reduce((s,r)=>s+r.amount,0);
