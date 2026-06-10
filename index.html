@@ -974,33 +974,6 @@ function renderCompare(snapDate){
       </div>`;
   }
 }
-  _fbConnected=true;
-  clearTimeout(_fbTimeout);
-  const val=snap.val();
-  allRows=[];
-  document.getElementById('chips').innerHTML='';
-  _fileRegistry={};
-  if(val){
-    Object.values(val).forEach(e=>{
-      if(e&&e.rows){
-        allRows=allRows.concat(e.rows);
-        addChip(e.fname,e.rows.length);
-      }
-    });
-    if(allRows.length>0){
-      document.getElementById('landing').style.display='none';
-      document.getElementById('dash').style.display='';
-      renderAll();
-    } else {
-      document.getElementById('dash').style.display='none';
-      document.getElementById('landing').style.display='';
-    }
-  } else {
-    document.getElementById('dash').style.display='none';
-    document.getElementById('landing').style.display='';
-  }
-  setStatus('מסונכרן ✓',true);
-},()=>setStatus('שגיאת חיבור',false));
 
 // ─── Drill-down Modal ───
 function openModal(rows, title, meta){
